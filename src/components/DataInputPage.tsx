@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './DataInput.css';
+import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -101,6 +102,60 @@ const DataInputPage: React.FC = () => {
   ]);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [selectedProject, setSelectedProject] = useState('Survey A — Sector 4');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem('isLoggedIn') === 'true';
+  });
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+      if (!isLoggedIn) {
+        setIsAuthenticated(false);
+        window.location.replace('/');
+        return;
+      }
+    };
+
+    checkAuth();
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+      if (!isLoggedIn) {
+        setIsAuthenticated(false);
+        window.location.replace('/');
+      } else {
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    setIsAuthenticated(false);
+    sessionStorage.clear();
+    localStorage.clear();
+    window.location.replace('/');
+  };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const addRow = () => {
     const newRow: LevelingRow = {
@@ -174,7 +229,6 @@ const DataInputPage: React.FC = () => {
             <span className="di-user-name">Ronald Talagtag</span>
             <span className="di-user-role">Engineer</span>
           </div>
-          <span className="di-user-chevron">⌄</span>
         </div>
       </aside>
 
@@ -194,6 +248,15 @@ const DataInputPage: React.FC = () => {
                   'Two-Peg Test — Unit 3',
                 ]}
               />
+              <div className="di-settings-wrapper">
+                <div className="di-settings-icon" onClick={() => setShowLogoutModal(true)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -321,6 +384,11 @@ const DataInputPage: React.FC = () => {
           </div>
         </div>
       </main>
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Reports.css';
+import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -46,6 +47,60 @@ const IconReports = () => (
 
 const ReportsPage: React.FC = () => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem('isLoggedIn') === 'true';
+  });
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+      if (!isLoggedIn) {
+        setIsAuthenticated(false);
+        window.location.replace('/');
+        return;
+      }
+    };
+
+    checkAuth();
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+      if (!isLoggedIn) {
+        setIsAuthenticated(false);
+        window.location.replace('/');
+      } else {
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    setIsAuthenticated(false);
+    sessionStorage.clear();
+    localStorage.clear();
+    window.location.replace('/');
+  };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const reports = [
     { id: 1, name: 'Survey A — Sector 4 Report', date: '2024-01-15', type: 'Leveling', status: 'Completed', size: '2.4 MB' },
@@ -99,7 +154,6 @@ const ReportsPage: React.FC = () => {
             <span className="rep-user-name">Ronald Talagtag</span>
             <span className="rep-user-role">Engineer</span>
           </div>
-          <span className="rep-user-chevron">⌄</span>
         </div>
       </aside>
 
@@ -108,6 +162,15 @@ const ReportsPage: React.FC = () => {
         <div className="rep-content">
           <div className="rep-header">
             <h1 className="rep-title">Reports</h1>
+            <div className="rep-settings-wrapper">
+              <div className="rep-settings-icon" onClick={() => setShowLogoutModal(true)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Quick Access */}
@@ -218,6 +281,11 @@ const ReportsPage: React.FC = () => {
           </div>
         </div>
       </main>
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };

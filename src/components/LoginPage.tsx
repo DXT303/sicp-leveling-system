@@ -61,8 +61,9 @@ const LoginPage: React.FC = () => {
         return;
       }
       setShowSuccess(true);
+      sessionStorage.setItem('isLoggedIn', 'true');
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.replace('/dashboard');
       }, 1500);
     } catch {
       setError('Something went wrong. Please try again.');
