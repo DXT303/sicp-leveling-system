@@ -38,13 +38,20 @@ const LoginPage: React.FC = () => {
     }
     setIsLoading(true);
     try {
+      const { csrfToken } = await fetch('/api/csrf-token').then(r => r.json());
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         body: JSON.stringify({ passcode }),
       });
+      if (response.status === 429) {
+        setError('Too many attempts. Try again in 15 minutes.');
+        return;
+      }
       if (!response.ok) throw new Error('Invalid passcode');
-      console.log('Access granted');
       window.location.href = '/dashboard';
     } catch {
       setError('Invalid passcode. Please try again.');
