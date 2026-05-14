@@ -23,6 +23,8 @@
   "scripts": {
     "dev": "concurrently \"node --watch server.js\" \"vite\"",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   }
 }
