@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Dashboard.css';
+import NewProjectModal from './NewProjectModal';
+import ImportDataModal from './ImportDataModal';
+import CalibrateModal from './CalibrateModal';
+import ExportDataModal from './ExportDataModal';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -52,6 +56,11 @@ const navItems = [
 ];
 
 const DashboardPage: React.FC = () => {
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [showImportDataModal, setShowImportDataModal] = useState(false);
+  const [showCalibrateModal, setShowCalibrateModal] = useState(false);
+  const [showExportDataModal, setShowExportDataModal] = useState(false);
+
   return (
     <div className="db-page">
 
@@ -144,12 +153,16 @@ const DashboardPage: React.FC = () => {
           <h2 className="db-card-title">Quick Access</h2>
           <div className="db-quick-grid">
             {[
-              { label: 'New Project', icon: '➕' },
-              { label: 'Import Data', icon: '⬇️' },
-              { label: 'Calibrate', icon: '🎯' },
-              { label: 'Export Data', icon: '📁' },
+              { label: 'New Project', icon: '➕', onClick: () => setShowNewProjectModal(true) },
+              { label: 'Import Data', icon: '⬇️', onClick: () => setShowImportDataModal(true) },
+              { label: 'Calibrate', icon: '🎯', onClick: () => setShowCalibrateModal(true) },
+              { label: 'Export Data', icon: '📁', onClick: () => setShowExportDataModal(true) },
             ].map((q) => (
-              <div className="db-quick-item" key={q.label}>
+              <div 
+                className="db-quick-item" 
+                key={q.label}
+                onClick={q.onClick}
+              >
                 <div className="db-quick-icon">{q.icon}</div>
                 <span>{q.label}</span>
               </div>
@@ -224,6 +237,23 @@ const DashboardPage: React.FC = () => {
         </div>
         </div>
       </main>
+
+      <NewProjectModal 
+        isOpen={showNewProjectModal} 
+        onClose={() => setShowNewProjectModal(false)} 
+      />
+      <ImportDataModal 
+        isOpen={showImportDataModal} 
+        onClose={() => setShowImportDataModal(false)} 
+      />
+      <CalibrateModal 
+        isOpen={showCalibrateModal} 
+        onClose={() => setShowCalibrateModal(false)} 
+      />
+      <ExportDataModal 
+        isOpen={showExportDataModal} 
+        onClose={() => setShowExportDataModal(false)} 
+      />
     </div>
   );
 };

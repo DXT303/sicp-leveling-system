@@ -172,15 +172,18 @@ body, html, #root {
 .db-user {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 20px 16px;
+  gap: 0;
+  padding: 20px 0;
   border-top: 1px solid #F0F0F0;
   overflow: hidden;
   justify-content: center;
+  transition: all 0.3s;
 }
 
 .db-sidebar:hover .db-user {
   justify-content: flex-start;
+  gap: 10px;
+  padding: 20px 16px;
 }
 
 .db-sidebar.collapsed .db-user {
@@ -218,12 +221,14 @@ body, html, #root {
 .db-user-info,
 .db-user-chevron {
   opacity: 0;
+  display: none;
   transition: opacity 0.2s;
 }
 
 .db-sidebar:hover .db-user-info,
 .db-sidebar:hover .db-user-chevron {
   opacity: 1;
+  display: flex;
 }
 
 .db-user-name {
