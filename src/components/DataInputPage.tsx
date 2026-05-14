@@ -61,7 +61,7 @@ const DataInputPage: React.FC = () => {
   const [rows, setRows] = useState<LevelingRow[]>([
     { id: 1, station: 'BM1', bs: '', is: '', fs: '', hi: '', rise: '', fall: '', rl: '', remarks: '' }
   ]);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   const addRow = () => {
     const newRow: LevelingRow = {

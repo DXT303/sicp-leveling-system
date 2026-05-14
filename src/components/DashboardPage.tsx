@@ -60,7 +60,7 @@ const DashboardPage: React.FC = () => {
   const [showImportDataModal, setShowImportDataModal] = useState(false);
   const [showCalibrateModal, setShowCalibrateModal] = useState(false);
   const [showExportDataModal, setShowExportDataModal] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   return (
     <div className="db-page">
