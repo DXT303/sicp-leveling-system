@@ -36,6 +36,7 @@ const LoginPage: React.FC = () => {
     const passcode = digits.join('');
     if (passcode.length < 6) {
       setError('Please enter all 6 digits.');
+      setShowModal(true);
       return;
     }
     setIsLoading(true);

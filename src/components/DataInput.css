@@ -1,0 +1,487 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.di-page {
+  display: flex;
+  min-height: 100vh;
+  background: #F2F2F7;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ── Sidebar ── */
+.di-sidebar {
+  width: 102px;
+  min-height: 100vh;
+  background: #FFFFFF;
+  box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.di-sidebar:hover {
+  width: 220px;
+}
+
+.di-sidebar.expanded {
+  width: 220px;
+}
+
+.di-sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 24px 20px 0;
+  overflow: hidden;
+}
+
+.di-sidebar-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #9197B3;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.di-sidebar:hover .di-sidebar-title {
+  opacity: 1;
+}
+
+.di-sidebar.expanded .di-sidebar-title {
+  opacity: 1;
+}
+
+.di-nav {
+  padding: 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+
+.di-sidebar:hover .di-nav {
+  padding: 20px 16px 0;
+  align-items: stretch;
+}
+
+.di-sidebar.expanded .di-nav {
+  padding: 20px 16px 0;
+  align-items: stretch;
+}
+
+.di-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #9197B3;
+  letter-spacing: -0.01em;
+  transition: background 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+
+.di-sidebar:hover .di-nav-item {
+  justify-content: flex-start;
+  padding: 12px 16px;
+  width: 100%;
+  height: auto;
+  gap: 12px;
+}
+
+.di-sidebar.expanded .di-nav-item {
+  justify-content: flex-start;
+  padding: 12px 16px;
+  width: 100%;
+  height: auto;
+  gap: 12px;
+}
+
+.di-sidebar:hover .di-nav-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.di-sidebar.expanded .di-nav-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.di-nav-label,
+.di-nav-chevron {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.2s, width 0.2s;
+}
+
+.di-sidebar:hover .di-nav-label,
+.di-sidebar:hover .di-nav-chevron {
+  opacity: 1;
+  width: auto;
+}
+
+.di-sidebar.expanded .di-nav-label,
+.di-sidebar.expanded .di-nav-chevron {
+  opacity: 1;
+  width: auto;
+}
+
+.di-nav-item:hover {
+  background: #FFF4EC;
+  color: #FF8D28;
+}
+
+.di-nav-active {
+  background: #FF8D28;
+  color: #FFFFFF;
+  width: 46px;
+  height: 46px;
+  justify-content: center;
+}
+
+.di-sidebar:hover .di-nav-active {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+}
+
+.di-sidebar.expanded .di-nav-active {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+}
+
+.di-nav-active:hover {
+  background: #e07820;
+  color: #FFFFFF;
+}
+
+.di-nav-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.di-nav-icon svg {
+  stroke: #9197B3;
+  transition: stroke 0.2s;
+}
+
+.di-nav-item:hover .di-nav-icon svg {
+  stroke: #FF8D28;
+}
+
+.di-nav-active .di-nav-icon svg {
+  stroke: #FFFFFF;
+}
+
+.di-nav-active:hover .di-nav-icon svg {
+  stroke: #FFFFFF;
+}
+
+.di-nav-label {
+  overflow: hidden;
+  transition: opacity 0.2s, width 0.2s;
+  white-space: nowrap;
+}
+
+.di-nav-chevron {
+  margin-left: auto;
+  font-size: 16px;
+  color: #9197B3;
+  transition: opacity 0.2s;
+}
+
+.di-nav-active .di-nav-chevron {
+  color: #FFFFFF;
+}
+
+.di-user {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 20px 0;
+  border-top: 1px solid #F0F0F0;
+  overflow: hidden;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.di-sidebar:hover .di-user {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 20px 16px;
+}
+
+.di-sidebar.expanded .di-user {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 20px 16px;
+}
+
+.di-user-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #FF8D28;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.di-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: opacity 0.2s;
+}
+
+.di-user-info,
+.di-user-chevron {
+  opacity: 0;
+  display: none;
+  transition: opacity 0.2s;
+}
+
+.di-sidebar:hover .di-user-info,
+.di-sidebar:hover .di-user-chevron {
+  opacity: 1;
+  display: flex;
+}
+
+.di-sidebar.expanded .di-user-info,
+.di-sidebar.expanded .di-user-chevron {
+  opacity: 1;
+  display: flex;
+}
+
+.di-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.di-user-role {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #757575;
+}
+
+.di-user-chevron {
+  margin-left: auto;
+  color: #757575;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+/* ── Main ── */
+.di-main {
+  flex: 1;
+  padding: 32px 40px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.di-content {
+  width: 100%;
+  max-width: 1250px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.di-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.di-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+}
+
+.di-project-select {
+  padding: 10px 16px;
+  border: 1px solid #D9D9D9;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  background: #FFFFFF;
+  cursor: pointer;
+  outline: none;
+}
+
+.di-table-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
+  padding: 32px;
+}
+
+.di-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.di-table-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+}
+
+.di-btn-add {
+  padding: 10px 20px;
+  background: #FF8D28;
+  border: none;
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.di-btn-add:hover {
+  background: #e07820;
+}
+
+.di-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.di-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.di-table th {
+  background: #F5F5F5;
+  padding: 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #000000;
+  border-bottom: 2px solid #E0E0E0;
+}
+
+.di-table td {
+  padding: 8px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.di-table input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #D9D9D9;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.di-table input:focus {
+  border-color: #FF8D28;
+}
+
+.di-table input:disabled {
+  background: #F5F5F5;
+  cursor: not-allowed;
+}
+
+.di-btn-delete {
+  background: none;
+  border: none;
+  color: #FF383C;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.di-btn-delete:hover:not(:disabled) {
+  background: #FFE5E5;
+}
+
+.di-btn-delete:disabled {
+  color: #D9D9D9;
+  cursor: not-allowed;
+}
+
+.di-table-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.di-btn-clear,
+.di-btn-save {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.di-btn-clear {
+  background: #F0F0F0;
+  border: 1px solid #D9D9D9;
+  color: #000000;
+}
+
+.di-btn-clear:hover {
+  background: #E0E0E0;
+}
+
+.di-btn-save {
+  background: #FF8D28;
+  border: 1px solid #FF8D28;
+  color: #FFFFFF;
+}
+
+.di-btn-save:hover {
+  background: #e07820;
+}

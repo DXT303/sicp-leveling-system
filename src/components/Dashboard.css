@@ -32,6 +32,10 @@ body, html, #root {
   width: 220px;
 }
 
+.db-sidebar.expanded {
+  width: 220px;
+}
+
 .db-sidebar-header {
   display: flex;
   align-items: center;
@@ -53,6 +57,10 @@ body, html, #root {
   opacity: 1;
 }
 
+.db-sidebar.expanded .db-sidebar-title {
+  opacity: 1;
+}
+
 .db-nav {
   padding: 20px 0 0;
   display: flex;
@@ -63,6 +71,11 @@ body, html, #root {
 }
 
 .db-sidebar:hover .db-nav {
+  padding: 20px 16px 0;
+  align-items: stretch;
+}
+
+.db-sidebar.expanded .db-nav {
   padding: 20px 16px 0;
   align-items: stretch;
 }
@@ -93,7 +106,20 @@ body, html, #root {
   gap: 12px;
 }
 
+.db-sidebar.expanded .db-nav-item {
+  justify-content: flex-start;
+  padding: 12px 16px;
+  width: 100%;
+  height: auto;
+  gap: 12px;
+}
+
 .db-sidebar:hover .db-nav-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.db-sidebar.expanded .db-nav-icon {
   width: 24px;
   height: 24px;
 }
@@ -112,6 +138,12 @@ body, html, #root {
   width: auto;
 }
 
+.db-sidebar.expanded .db-nav-label,
+.db-sidebar.expanded .db-nav-chevron {
+  opacity: 1;
+  width: auto;
+}
+
 .db-nav-item:hover {
   background: #FFF4EC;
   color: #FF8D28;
@@ -126,6 +158,12 @@ body, html, #root {
 }
 
 .db-sidebar:hover .db-nav-active {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+}
+
+.db-sidebar.expanded .db-nav-active {
   width: 100%;
   height: auto;
   justify-content: flex-start;
@@ -186,6 +224,12 @@ body, html, #root {
   padding: 20px 16px;
 }
 
+.db-sidebar.expanded .db-user {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 20px 16px;
+}
+
 .db-sidebar.collapsed .db-user {
   justify-content: center;
   padding: 20px 0;
@@ -227,6 +271,12 @@ body, html, #root {
 
 .db-sidebar:hover .db-user-info,
 .db-sidebar:hover .db-user-chevron {
+  opacity: 1;
+  display: flex;
+}
+
+.db-sidebar.expanded .db-user-info,
+.db-sidebar.expanded .db-user-chevron {
   opacity: 1;
   display: flex;
 }

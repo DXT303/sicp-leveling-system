@@ -60,12 +60,16 @@ const DashboardPage: React.FC = () => {
   const [showImportDataModal, setShowImportDataModal] = useState(false);
   const [showCalibrateModal, setShowCalibrateModal] = useState(false);
   const [showExportDataModal, setShowExportDataModal] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   return (
     <div className="db-page">
 
       {/* Sidebar */}
-      <aside className="db-sidebar">
+      <aside className={`db-sidebar ${sidebarExpanded ? 'expanded' : ''}`} 
+        onMouseEnter={() => setSidebarExpanded(true)}
+        onMouseLeave={() => setSidebarExpanded(false)}
+      >
         <div>
           <div className="db-sidebar-header">
             <span className="db-sidebar-title">Dashboard</span>
@@ -76,8 +80,13 @@ const DashboardPage: React.FC = () => {
               <span className="db-nav-label">Dashboard</span>
               <span className="db-nav-chevron">›</span>
             </div>
-            {navItems.map((item) => (
-              <div className="db-nav-item" key={item.label}>
+            {[
+              { label: 'Data Input', icon: <IconDataInput />, path: '/data-input' },
+              { label: 'Computation', icon: <IconComputation />, path: '/computation' },
+              { label: 'Calibration', icon: <IconCalibration />, path: '/calibration' },
+              { label: 'Reports', icon: <IconReports />, path: '/reports' },
+            ].map((item) => (
+              <div className="db-nav-item" key={item.label} onClick={() => window.location.href = item.path}>
                 <span className="db-nav-icon">{item.icon}</span>
                 <span className="db-nav-label">{item.label}</span>
                 <span className="db-nav-chevron">›</span>
