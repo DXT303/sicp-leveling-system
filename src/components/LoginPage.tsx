@@ -1,59 +1,55 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { LoginFormData, LoginFormErrors, LoginPayload } from '../types/login.types';
+import React, { useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
 import './auth.css';
 
 const LoginPage: React.FC = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
-
-  const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
+  const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const validate = (): boolean => {
-    const newErrors: LoginFormErrors = {};
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+  const handleChange = (i: number, e: ChangeEvent<HTMLInputElement>): void => {
+    const val = e.target.value.replace(/\D/, '');
+    if (!val) return;
+    const updated = [...digits];
+    updated[i] = val[val.length - 1];
+    setDigits(updated);
+    setError('');
+    if (i < 5) inputs.current[i + 1]?.focus();
+  };
+
+  const handleKeyDown = (i: number, e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Backspace') {
+      const updated = [...digits];
+      if (digits[i]) {
+        updated[i] = '';
+        setDigits(updated);
+      } else if (i > 0) {
+        inputs.current[i - 1]?.focus();
+      }
     }
-    if (!formData.password) newErrors.password = 'Password is required';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (!validate()) return;
+    const passcode = digits.join('');
+    if (passcode.length < 6) {
+      setError('Please enter all 6 digits.');
+      return;
+    }
     setIsLoading(true);
-    const payload: LoginPayload = {
-      email: formData.email,
-      password: formData.password,
-      rememberMe: formData.rememberMe,
-    };
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ passcode }),
       });
-      if (!response.ok) throw new Error('Login failed');
-      const data = await response.json();
-      console.log('Login success:', data);
-    } catch (error) {
-      console.error('Login error:', error);
-      setErrors({ password: 'Invalid email or password' });
+      if (!response.ok) throw new Error('Invalid passcode');
+      console.log('Access granted');
+      window.location.href = '/dashboard';
+    } catch {
+      setError('Invalid passcode. Please try again.');
+      setDigits(Array(6).fill(''));
+      inputs.current[0]?.focus();
     } finally {
       setIsLoading(false);
     }
@@ -63,76 +59,44 @@ const LoginPage: React.FC = () => {
     <div className="auth-page">
       <div className="auth-modal">
 
-        {/* Left: Form */}
         <div className="auth-form-wrapper">
           <form className="auth-form-group" onSubmit={handleSubmit} noValidate>
 
             <h1 className="auth-title">Welcome back!</h1>
-            <p className="auth-subtitle">Enter your Credentials to access your account</p>
+            <p className="auth-subtitle">Enter your passcode to access the system.</p>
 
-            {/* Email Field */}
-            <div className="auth-field">
-              <span className="auth-field-label" onMouseDown={(e) => e.preventDefault()}>Email address</span>
-              <input
-                id="email"
-                className={`auth-field-input${errors.email ? ' input-error' : ''}`}
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && <span className="auth-error">{errors.email}</span>}
+            <div className="otp-group">
+              {digits.map((d, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { inputs.current[i] = el; }}
+                  className={`otp-input${error ? ' input-error' : ''}`}
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={d}
+                  onChange={(e) => handleChange(i, e)}
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                />
+              ))}
             </div>
+            {error && <span className="auth-error">{error}</span>}
 
-            {/* Password Field */}
-            <div className="auth-field">
-              <span className="auth-field-label" onMouseDown={(e) => e.preventDefault()}>
-                Password
-                <a href="/forgot-password" className="forgot-password" onClick={(e) => e.stopPropagation()}>Forgot password</a>
-              </span>
-              <input
-                className={`auth-field-input${errors.password ? ' input-error' : ''}`}
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && <span className="auth-error">{errors.password}</span>}
-            </div>
-
-            {/* Remember Me */}
-            <div className="auth-checkbox-group">
-              <input
-                className="auth-checkbox"
-                type="checkbox"
-                name="rememberMe"
-                id="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleChange}
-              />
-              <label className="auth-checkbox-label" htmlFor="rememberMe">Remember me</label>
-            </div>
-
-            {/* Login Button */}
             <div className="auth-btn-wrapper">
               <button className="auth-btn" type="submit" disabled={isLoading}>
-                <span className="auth-btn-text">{isLoading ? 'Logging in...' : 'Login'}</span>
+                <span className="auth-btn-text">{isLoading ? 'Verifying...' : 'Login'}</span>
               </button>
             </div>
 
-            <p className="auth-bottom-link">
-              Don't have an account? <span onClick={() => window.location.href = '/signup'}>Sign Up</span>
-            </p>
+            <p className="auth-contact">Need access? <span>Contact Administrator</span></p>
 
           </form>
         </div>
 
-        {/* Right: Background Image */}
         <div className="auth-bg-image" />
 
       </div>
+      <p className="auth-copyright">© 2026 Survey Leveling System V1.1</p>
     </div>
   );
 };
