@@ -72,7 +72,7 @@ const DashboardPage: React.FC = () => {
       >
         <div>
           <div className="db-sidebar-header">
-            <span className="db-sidebar-title">Dashboard</span>
+            <span className="db-sidebar-title">LOGO</span>
           </div>
           <nav className="db-nav">
             <div className="db-nav-item db-nav-active">

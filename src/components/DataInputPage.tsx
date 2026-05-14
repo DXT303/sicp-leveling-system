@@ -57,11 +57,50 @@ interface LevelingRow {
   remarks: string;
 }
 
+const CustomDropdown: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}> = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="di-custom-dropdown">
+      <div 
+        className="di-custom-dropdown-selected" 
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{value}</span>
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+          <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="di-custom-dropdown-options">
+          {options.map((option) => (
+            <div
+              key={option}
+              className={`di-custom-dropdown-option ${value === option ? 'selected' : ''}`}
+              onClick={() => {
+                onChange(option);
+                setIsOpen(false);
+              }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DataInputPage: React.FC = () => {
   const [rows, setRows] = useState<LevelingRow[]>([
     { id: 1, station: 'BM1', bs: '', is: '', fs: '', hi: '', rise: '', fall: '', rl: '', remarks: '' }
   ]);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [selectedProject, setSelectedProject] = useState('Survey A — Sector 4');
 
   const addRow = () => {
     const newRow: LevelingRow = {
@@ -98,7 +137,7 @@ const DataInputPage: React.FC = () => {
       >
         <div>
           <div className="di-sidebar-header">
-            <span className="di-sidebar-title">Dashboard</span>
+            <span className="di-sidebar-title">LOGO</span>
           </div>
           <nav className="di-nav">
             <div className="di-nav-item" onClick={() => window.location.href = '/dashboard'}>
@@ -146,11 +185,15 @@ const DataInputPage: React.FC = () => {
           <div className="di-header">
             <h1 className="di-title">Data Input</h1>
             <div className="di-header-actions">
-              <select className="di-project-select">
-                <option>Survey A — Sector 4</option>
-                <option>Calibration Unit 7</option>
-                <option>Two-Peg Test — Unit 3</option>
-              </select>
+              <CustomDropdown
+                value={selectedProject}
+                onChange={setSelectedProject}
+                options={[
+                  'Survey A — Sector 4',
+                  'Calibration Unit 7',
+                  'Two-Peg Test — Unit 3',
+                ]}
+              />
             </div>
           </div>
 
