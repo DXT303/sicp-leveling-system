@@ -247,3 +247,159 @@ html, body, #root {
   color: #e53e3e;
   margin-top: 4px;
 }
+
+/* ── Error Modal ── */
+.error-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.error-modal {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 40px 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.error-modal-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 0.6s ease;
+}
+
+.error-modal-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 12px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.error-modal-message {
+  font-size: 16px;
+  color: #666666;
+  margin-bottom: 28px;
+  line-height: 1.5;
+  font-family: 'Poppins', sans-serif;
+}
+
+.error-modal-btn {
+  background: #FF8D28;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: 'Poppins', sans-serif;
+}
+
+.error-modal-btn:hover {
+  background: #e07820;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ── Success Modal ── */
+.success-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.success-modal {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 40px 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.success-checkmark {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.success-checkmark svg {
+  width: 80px;
+  height: 80px;
+}
+
+.success-checkmark-circle {
+  stroke: #34C759;
+  stroke-width: 2;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.success-checkmark-check {
+  stroke: #34C759;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
+}
+
+.success-modal-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #34C759;
+  margin-bottom: 12px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.success-modal-message {
+  font-size: 16px;
+  color: #666666;
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}

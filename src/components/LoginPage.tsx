@@ -5,6 +5,8 @@ const LoginPage: React.FC = () => {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleChange = (i: number, e: ChangeEvent<HTMLInputElement>): void => {
@@ -46,18 +48,24 @@ const LoginPage: React.FC = () => {
       const data = await response.json();
       if (response.status === 429) {
         setError('Too many attempts. Try again in 15 minutes.');
+        setShowModal(true);
         setDigits(Array(6).fill(''));
         return;
       }
       if (!response.ok) {
         setError(data.message || 'Invalid passcode. Please try again.');
+        setShowModal(true);
         setDigits(Array(6).fill(''));
         inputs.current[0]?.focus();
         return;
       }
-      window.location.href = '/dashboard';
+      setShowSuccess(true);
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1500);
     } catch {
       setError('Something went wrong. Please try again.');
+      setShowModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +86,7 @@ const LoginPage: React.FC = () => {
                 <input
                   key={i}
                   ref={(el) => { inputs.current[i] = el; }}
-                  className={`otp-input${error ? ' input-error' : ''}`}
+                  className="otp-input"
                   type="password"
                   inputMode="numeric"
                   maxLength={1}
@@ -88,7 +96,6 @@ const LoginPage: React.FC = () => {
                 />
               ))}
             </div>
-            {error && <span className="auth-error">{error}</span>}
 
             <div className="auth-btn-wrapper">
               <button className="auth-btn" type="submit" disabled={isLoading}>
@@ -105,6 +112,34 @@ const LoginPage: React.FC = () => {
 
       </div>
       <p className="auth-copyright">© 2026 Survey Leveling System V1.1</p>
+
+      {/* Error Modal */}
+      {showModal && (
+        <div className="error-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="error-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="error-modal-icon">❌</div>
+            <h2 className="error-modal-title">Oops!</h2>
+            <p className="error-modal-message">{error}</p>
+            <button className="error-modal-btn" onClick={() => setShowModal(false)}>Try Again</button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="success-modal-overlay">
+          <div className="success-modal">
+            <div className="success-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+            <h2 className="success-modal-title">Access Granted!</h2>
+            <p className="success-modal-message">Redirecting to dashboard...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
