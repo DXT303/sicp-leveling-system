@@ -40,37 +40,26 @@ const LoginPage: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passcode }),
-      });
-      const data = await response.json();
-      if (response.status === 429) {
-        setError('Too many attempts. Try again in 15 minutes.');
-        setShowModal(true);
-        setDigits(Array(6).fill(''));
-        return;
-      }
-      if (!response.ok) {
-        setError(data.message || 'Invalid passcode. Please try again.');
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Validate passcode (replace '123456' with your actual passcode)
+      const VALID_PASSCODE = '123456'; // Change this to your actual passcode
+      
+      if (passcode === VALID_PASSCODE) {
+        setShowSuccess(true);
+        sessionStorage.setItem('isLoggedIn', 'true');
+        setTimeout(() => {
+          window.location.replace('/dashboard');
+        }, 1500);
+      } else {
+        setError('Invalid passcode. Please try again.');
         setShowModal(true);
         setDigits(Array(6).fill(''));
         inputs.current[0]?.focus();
-        return;
       }
-      setShowSuccess(true);
-      sessionStorage.setItem('isLoggedIn', 'true');
-      setTimeout(() => {
-        window.location.replace('/dashboard');
-      }, 1500);
-    } catch {
-      setError('Something went wrong. Please try again.');
-      setShowModal(true);
-    } finally {
       setIsLoading(false);
-    }
+    }, 800);
   };
 
   return (
