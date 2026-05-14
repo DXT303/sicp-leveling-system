@@ -1,4 +1,4 @@
-import React, { useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
+import React, { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react';
 import './auth.css';
 
 const LoginPage: React.FC = () => {
@@ -8,6 +8,13 @@ const LoginPage: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    document.body.style.zoom = '80%';
+    return () => {
+      document.body.style.zoom = '100%';
+    };
+  }, []);
 
   const handleChange = (i: number, e: ChangeEvent<HTMLInputElement>): void => {
     const val = e.target.value.replace(/\D/, '');
