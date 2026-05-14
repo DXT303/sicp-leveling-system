@@ -38,25 +38,26 @@ const LoginPage: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const { csrfToken } = await fetch('/api/csrf-token').then(r => r.json());
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passcode }),
       });
+      const data = await response.json();
       if (response.status === 429) {
         setError('Too many attempts. Try again in 15 minutes.');
+        setDigits(Array(6).fill(''));
         return;
       }
-      if (!response.ok) throw new Error('Invalid passcode');
+      if (!response.ok) {
+        setError(data.message || 'Invalid passcode. Please try again.');
+        setDigits(Array(6).fill(''));
+        inputs.current[0]?.focus();
+        return;
+      }
       window.location.href = '/dashboard';
     } catch {
-      setError('Invalid passcode. Please try again.');
-      setDigits(Array(6).fill(''));
-      inputs.current[0]?.focus();
+      setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }

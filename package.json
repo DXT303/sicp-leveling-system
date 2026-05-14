@@ -21,7 +21,7 @@
     "vite": "^5.0.0"
   },
   "scripts": {
-    "dev": "concurrently \"node server.js\" \"vite\"",
+    "dev": "concurrently \"node --watch server.js\" \"vite\"",
     "build": "vite build",
     "preview": "vite preview"
   }

@@ -5,13 +5,14 @@ import rateLimit from 'express-rate-limit';
 const app = express();
 app.use(express.json());
 
-// ── Rate Limiting: max 5 attempts per 15 minutes ──
+// ── Rate Limiting: max 5 failed attempts per 15 minutes ──
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: { success: false, message: 'Too many attempts. Try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
 });
 
 // ── Login Route ──
