@@ -103,9 +103,16 @@ const DataInputPage: React.FC = () => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [selectedProject, setSelectedProject] = useState('Survey A — Sector 4');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('isLoggedIn') === 'true';
   });
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -268,113 +275,77 @@ const DataInputPage: React.FC = () => {
             </div>
 
             <div className="di-table-wrapper">
-              <table className="di-table">
-                <thead>
-                  <tr>
-                    <th>Station</th>
-                    <th>BS</th>
-                    <th>IS</th>
-                    <th>FS</th>
-                    <th>HI</th>
-                    <th>Rise</th>
-                    <th>Fall</th>
-                    <th>RL</th>
-                    <th>Remarks</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map(row => (
-                    <tr key={row.id}>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.station}
-                          onChange={(e) => updateRow(row.id, 'station', e.target.value)}
-                          placeholder="Station"
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.bs}
-                          onChange={(e) => updateRow(row.id, 'bs', e.target.value)}
-                          placeholder="0.000"
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.is}
-                          onChange={(e) => updateRow(row.id, 'is', e.target.value)}
-                          placeholder="0.000"
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.fs}
-                          onChange={(e) => updateRow(row.id, 'fs', e.target.value)}
-                          placeholder="0.000"
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.hi}
-                          onChange={(e) => updateRow(row.id, 'hi', e.target.value)}
-                          placeholder="0.000"
-                          disabled
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.rise}
-                          onChange={(e) => updateRow(row.id, 'rise', e.target.value)}
-                          placeholder="0.000"
-                          disabled
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.fall}
-                          onChange={(e) => updateRow(row.id, 'fall', e.target.value)}
-                          placeholder="0.000"
-                          disabled
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.rl}
-                          onChange={(e) => updateRow(row.id, 'rl', e.target.value)}
-                          placeholder="0.000"
-                          disabled
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.remarks}
-                          onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                          placeholder="Remarks"
-                        />
-                      </td>
-                      <td>
-                        <button 
+              {isMobile ? (
+                <div className="di-card-list">
+                  {rows.map((row, idx) => (
+                    <div className="di-row-card" key={row.id}>
+                      <div className="di-row-card-header">
+                        <span className="di-row-card-num">Row {idx + 1}</span>
+                        <button
                           className="di-btn-delete"
                           onClick={() => deleteRow(row.id)}
                           disabled={rows.length === 1}
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
+                        >×</button>
+                      </div>
+                      {([
+                        { label: 'Station', field: 'station', placeholder: 'Station', disabled: false },
+                        { label: 'BS', field: 'bs', placeholder: '0.000', disabled: false },
+                        { label: 'IS', field: 'is', placeholder: '0.000', disabled: false },
+                        { label: 'FS', field: 'fs', placeholder: '0.000', disabled: false },
+                        { label: 'HI', field: 'hi', placeholder: '0.000', disabled: true },
+                        { label: 'Rise', field: 'rise', placeholder: '0.000', disabled: true },
+                        { label: 'Fall', field: 'fall', placeholder: '0.000', disabled: true },
+                        { label: 'RL', field: 'rl', placeholder: '0.000', disabled: true },
+                        { label: 'Remarks', field: 'remarks', placeholder: 'Remarks', disabled: false },
+                      ] as const).map(({ label, field, placeholder, disabled }) => (
+                        <div className="di-row-card-field" key={field}>
+                          <span className="di-row-card-label">{label}</span>
+                          <input
+                            type="text"
+                            value={row[field]}
+                            onChange={(e) => updateRow(row.id, field, e.target.value)}
+                            placeholder={placeholder}
+                            disabled={disabled}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              ) : (
+                <table className="di-table">
+                  <thead>
+                    <tr>
+                      <th>Station</th>
+                      <th>BS</th>
+                      <th>IS</th>
+                      <th>FS</th>
+                      <th>HI</th>
+                      <th>Rise</th>
+                      <th>Fall</th>
+                      <th>RL</th>
+                      <th>Remarks</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(row => (
+                      <tr key={row.id}>
+                        <td><input type="text" value={row.station} onChange={(e) => updateRow(row.id, 'station', e.target.value)} placeholder="Station" /></td>
+                        <td><input type="text" value={row.bs} onChange={(e) => updateRow(row.id, 'bs', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.is} onChange={(e) => updateRow(row.id, 'is', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.fs} onChange={(e) => updateRow(row.id, 'fs', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.hi} onChange={(e) => updateRow(row.id, 'hi', e.target.value)} placeholder="0.000" disabled /></td>
+                        <td><input type="text" value={row.rise} onChange={(e) => updateRow(row.id, 'rise', e.target.value)} placeholder="0.000" disabled /></td>
+                        <td><input type="text" value={row.fall} onChange={(e) => updateRow(row.id, 'fall', e.target.value)} placeholder="0.000" disabled /></td>
+                        <td><input type="text" value={row.rl} onChange={(e) => updateRow(row.id, 'rl', e.target.value)} placeholder="0.000" disabled /></td>
+                        <td><input type="text" value={row.remarks} onChange={(e) => updateRow(row.id, 'remarks', e.target.value)} placeholder="Remarks" /></td>
+                        <td><button className="di-btn-delete" onClick={() => deleteRow(row.id)} disabled={rows.length === 1}>×</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             <div className="di-table-footer">
