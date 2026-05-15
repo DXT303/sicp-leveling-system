@@ -51,7 +51,7 @@ const LoginPage: React.FC = () => {
     // Simulate API call with timeout
     setTimeout(() => {
       // Validate passcode (replace '123456' with your actual passcode)
-      const VALID_PASSCODE = '123456'; // Change this to your actual passcode
+      const VALID_PASSCODE = import.meta.env.VITE_PASSCODE;
       
       if (passcode === VALID_PASSCODE) {
         setShowSuccess(true);
