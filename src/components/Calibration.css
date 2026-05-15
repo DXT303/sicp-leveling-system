@@ -351,6 +351,29 @@ body {
   color: #FF8D28;
 }
 
+.cal-settings-wrapper::after {
+  content: 'Logout';
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #333333;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.cal-settings-wrapper:hover::after {
+  opacity: 1;
+}
+
 .cal-settings-menu {
   position: absolute;
   top: calc(100% + 8px);
