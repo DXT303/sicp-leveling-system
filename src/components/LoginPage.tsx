@@ -10,8 +10,7 @@ const LoginPage: React.FC = () => {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile) document.body.style.zoom = '80%';
+    document.body.style.zoom = '90%';
     return () => {
       document.body.style.zoom = '100%';
     };
