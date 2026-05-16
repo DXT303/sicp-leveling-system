@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@libsql/client": "^0.17.3",
     "csrf": "^3.1.0",
     "csrf-sync": "^4.2.1",
     "dotenv": "^16.3.1",

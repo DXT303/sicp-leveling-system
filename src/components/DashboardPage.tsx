@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
+import Sidebar from './Sidebar';
 import NewProjectModal from './NewProjectModal';
 import ImportDataModal from './ImportDataModal';
 import CalibrateModal from './CalibrateModal';
 import ExportDataModal from './ExportDataModal';
 import LogoutModal from './LogoutModal';
+import { useProjects } from './useProjects';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -49,6 +51,12 @@ const IconReports = () => (
   </svg>
 );
 
+const IconProjects = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M3 7h18M3 12h18M3 17h18"/>
+  </svg>
+);
+
 const navItems = [
   { label: 'Data Input', icon: <IconDataInput /> },
   { label: 'Computation', icon: <IconComputation /> },
@@ -63,6 +71,7 @@ const DashboardPage: React.FC = () => {
   const [showExportDataModal, setShowExportDataModal] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { projects, addProject, deleteProject } = useProjects();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('isLoggedIn') === 'true';
   });
@@ -120,44 +129,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="db-page">
 
-      {/* Sidebar */}
-      <aside className={`db-sidebar ${sidebarExpanded ? 'expanded' : ''}`} 
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      >
-        <div>
-          <div className="db-sidebar-header">
-            <span className="db-sidebar-title">LOGO</span>
-          </div>
-          <nav className="db-nav">
-            <div className="db-nav-item db-nav-active">
-              <span className="db-nav-icon"><IconDashboard /></span>
-              <span className="db-nav-label">Dashboard</span>
-              <span className="db-nav-chevron">›</span>
-            </div>
-            {[
-              { label: 'Data Input', icon: <IconDataInput />, path: '/data-input' },
-              { label: 'Computation', icon: <IconComputation />, path: '/computation' },
-              { label: 'Calibration', icon: <IconCalibration />, path: '/calibration' },
-              { label: 'Reports', icon: <IconReports />, path: '/reports' },
-            ].map((item) => (
-              <div className="db-nav-item" key={item.label} onClick={() => window.location.href = item.path}>
-                <span className="db-nav-icon">{item.icon}</span>
-                <span className="db-nav-label">{item.label}</span>
-                <span className="db-nav-chevron">›</span>
-              </div>
-            ))}
-          </nav>
-        </div>
-
-        <div className="db-user">
-          <div className="db-user-avatar">R</div>
-          <div className="db-user-info">
-            <span className="db-user-name">Ronald Talagtag</span>
-            <span className="db-user-role">Engineer</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activePath="/dashboard" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}
       <main className="db-main">
@@ -249,26 +221,36 @@ const DashboardPage: React.FC = () => {
 
           {/* Active Projects */}
           <div className="db-projects-card">
-            <h2 className="db-card-title">Active Projects</h2>
-            {[
-              { color: '#FFCC00', name: 'Survey A — Sector 4', progress: 75, edited: 'today', closure: '±2.4mm', status: '⚠️ Calibration: Pending' },
-              { color: '#FF383C', name: 'Calibration Unit 7', progress: 40, edited: '3 days ago', closure: '±3.1mm', status: '❌ Calibration: Failed' },
-              { color: '#FFCC00', name: 'Two-Peg Test — Unit 3', progress: 30, edited: '1 week ago', closure: '±1.9mm', status: '⚠️ Calibration: Pending' },
-            ].map((p) => (
-              <div className="db-project-item" key={p.name}>
-                <div className="db-project-dot" style={{ background: p.color }} />
-                <div className="db-project-info">
-                  <div className="db-project-header">
-                    <span className="db-project-name">{p.name}</span>
-                    <span className="db-project-pct">{p.progress}%</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <h2 className="db-card-title" style={{ marginBottom: 0 }}>Active Projects</h2>
+              <span
+                onClick={() => window.location.href = '/projects'}
+                style={{ fontSize: '13px', color: '#FF8D28', cursor: 'pointer', fontWeight: 500 }}
+              >View all ›</span>
+            </div>
+            {projects.length === 0 ? (
+              <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No projects yet. Click "New Project" to get started.</p>
+            ) : (
+              projects.slice(0, 3).map((p) => (
+                <div className="db-project-item" key={p.id}>
+                  <div className="db-project-dot" style={{ background: p.status === 'completed' ? '#34C759' : p.status === 'pending' ? '#FFCC00' : '#FF8D28' }} />
+                  <div className="db-project-info">
+                    <div className="db-project-header">
+                      <span className="db-project-name">{p.name}</span>
+                      <span className="db-project-pct">{p.progress}%</span>
+                    </div>
+                    <div className="db-progress-bar">
+                      <div className="db-progress-fill" style={{ width: `${p.progress}%`, background: '#FF8D28' }} />
+                    </div>
+                    <p className="db-project-meta">Created: {p.createdAt} · {p.instrument} · k={p.distanceK}km</p>
                   </div>
-                  <div className="db-progress-bar">
-                    <div className="db-progress-fill" style={{ width: `${p.progress}%`, background: p.color }} />
-                  </div>
-                  <p className="db-project-meta">Last edited: {p.edited} · Closure: {p.closure} · {p.status}</p>
+                  <button
+                    onClick={() => deleteProject(p.id)}
+                    style={{ background: 'none', border: 'none', color: '#FF383C', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
+                  >×</button>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Activity Logs */}
@@ -312,9 +294,10 @@ const DashboardPage: React.FC = () => {
         </div>
       </main>
 
-      <NewProjectModal 
-        isOpen={showNewProjectModal} 
-        onClose={() => setShowNewProjectModal(false)} 
+      <NewProjectModal
+        isOpen={showNewProjectModal}
+        onClose={() => setShowNewProjectModal(false)}
+        onSave={(data) => addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK })}
       />
       <ImportDataModal 
         isOpen={showImportDataModal} 

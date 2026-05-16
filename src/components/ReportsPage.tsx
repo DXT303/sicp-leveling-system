@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Reports.css';
+import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
@@ -110,52 +111,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="rep-page">
-      {/* Sidebar */}
-      <aside className={`rep-sidebar ${sidebarExpanded ? 'expanded' : ''}`}
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      >
-        <div>
-          <div className="rep-sidebar-header">
-            <span className="rep-sidebar-title">LOGO</span>
-          </div>
-          <nav className="rep-nav">
-            <div className="rep-nav-item" onClick={() => window.location.href = '/dashboard'}>
-              <span className="rep-nav-icon"><IconDashboard /></span>
-              <span className="rep-nav-label">Dashboard</span>
-              <span className="rep-nav-chevron">›</span>
-            </div>
-            <div className="rep-nav-item" onClick={() => window.location.href = '/data-input'}>
-              <span className="rep-nav-icon"><IconDataInput /></span>
-              <span className="rep-nav-label">Data Input</span>
-              <span className="rep-nav-chevron">›</span>
-            </div>
-            <div className="rep-nav-item" onClick={() => window.location.href = '/computation'}>
-              <span className="rep-nav-icon"><IconComputation /></span>
-              <span className="rep-nav-label">Computation</span>
-              <span className="rep-nav-chevron">›</span>
-            </div>
-            <div className="rep-nav-item" onClick={() => window.location.href = '/calibration'}>
-              <span className="rep-nav-icon"><IconCalibration /></span>
-              <span className="rep-nav-label">Calibration</span>
-              <span className="rep-nav-chevron">›</span>
-            </div>
-            <div className="rep-nav-item rep-nav-active">
-              <span className="rep-nav-icon"><IconReports /></span>
-              <span className="rep-nav-label">Reports</span>
-              <span className="rep-nav-chevron">›</span>
-            </div>
-          </nav>
-        </div>
-
-        <div className="rep-user">
-          <div className="rep-user-avatar">R</div>
-          <div className="rep-user-info">
-            <span className="rep-user-name">Ronald Talagtag</span>
-            <span className="rep-user-role">Engineer</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activePath="/reports" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}
       <main className="rep-main">

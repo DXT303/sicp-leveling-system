@@ -322,6 +322,29 @@
   color: #FF8D28;
 }
 
+.di-settings-wrapper::after {
+  content: 'Logout';
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #333333;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.di-settings-wrapper:hover::after {
+  opacity: 1;
+}
+
 .di-settings-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -734,6 +757,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    width: 100%;
   }
 
   .di-row-card {
@@ -744,12 +768,16 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .di-row-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     margin-bottom: 4px;
   }
 
@@ -762,25 +790,30 @@
   .di-row-card-field {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .di-row-card-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #333333;
-    width: 70px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555555;
+    width: 64px;
+    min-width: 64px;
     flex-shrink: 0;
   }
 
   .di-row-card-field input {
     flex: 1;
-    padding: 8px 12px;
+    min-width: 0;
+    padding: 8px 10px;
     border: 1px solid #D9D9D9;
     border-radius: 6px;
     font-family: 'Poppins', sans-serif;
     font-size: 13px;
     outline: none;
+    box-sizing: border-box;
   }
 
   .di-row-card-field input:focus {

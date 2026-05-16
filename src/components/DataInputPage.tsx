@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DataInput.css';
+import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
@@ -49,13 +50,10 @@ interface LevelingRow {
   id: number;
   station: string;
   bs: string;
-  is: string;
   fs: string;
+  tbm: string;
+  elev: string;
   hi: string;
-  rise: string;
-  fall: string;
-  rl: string;
-  remarks: string;
 }
 
 const CustomDropdown: React.FC<{
@@ -98,7 +96,7 @@ const CustomDropdown: React.FC<{
 
 const DataInputPage: React.FC = () => {
   const [rows, setRows] = useState<LevelingRow[]>([
-    { id: 1, station: 'BM1', bs: '', is: '', fs: '', hi: '', rise: '', fall: '', rl: '', remarks: '' }
+    { id: 1, station: 'BM1', bs: '', fs: '', tbm: '', elev: '', hi: '' }
   ]);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [selectedProject, setSelectedProject] = useState('Survey A — Sector 4');
@@ -169,13 +167,10 @@ const DataInputPage: React.FC = () => {
       id: rows.length + 1,
       station: '',
       bs: '',
-      is: '',
       fs: '',
-      hi: '',
-      rise: '',
-      fall: '',
-      rl: '',
-      remarks: ''
+      tbm: '',
+      elev: '',
+      hi: ''
     };
     setRows([...rows, newRow]);
   };
@@ -192,52 +187,7 @@ const DataInputPage: React.FC = () => {
 
   return (
     <div className="di-page">
-      {/* Sidebar */}
-      <aside className={`di-sidebar ${sidebarExpanded ? 'expanded' : ''}`}
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      >
-        <div>
-          <div className="di-sidebar-header">
-            <span className="di-sidebar-title">LOGO</span>
-          </div>
-          <nav className="di-nav">
-            <div className="di-nav-item" onClick={() => window.location.href = '/dashboard'}>
-              <span className="di-nav-icon"><IconDashboard /></span>
-              <span className="di-nav-label">Dashboard</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item di-nav-active">
-              <span className="di-nav-icon"><IconDataInput /></span>
-              <span className="di-nav-label">Data Input</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item" onClick={() => window.location.href = '/computation'}>
-              <span className="di-nav-icon"><IconComputation /></span>
-              <span className="di-nav-label">Computation</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item" onClick={() => window.location.href = '/calibration'}>
-              <span className="di-nav-icon"><IconCalibration /></span>
-              <span className="di-nav-label">Calibration</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item" onClick={() => window.location.href = '/reports'}>
-              <span className="di-nav-icon"><IconReports /></span>
-              <span className="di-nav-label">Reports</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-          </nav>
-        </div>
-
-        <div className="di-user">
-          <div className="di-user-avatar">R</div>
-          <div className="di-user-info">
-            <span className="di-user-name">Ronald Talagtag</span>
-            <span className="di-user-role">Engineer</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activePath="/data-input" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}
       <main className="di-main">
@@ -288,16 +238,13 @@ const DataInputPage: React.FC = () => {
                         >×</button>
                       </div>
                       {([
-                        { label: 'Station', field: 'station', placeholder: 'Station', disabled: false },
-                        { label: 'BS', field: 'bs', placeholder: '0.000', disabled: false },
-                        { label: 'IS', field: 'is', placeholder: '0.000', disabled: false },
-                        { label: 'FS', field: 'fs', placeholder: '0.000', disabled: false },
-                        { label: 'HI', field: 'hi', placeholder: '0.000', disabled: true },
-                        { label: 'Rise', field: 'rise', placeholder: '0.000', disabled: true },
-                        { label: 'Fall', field: 'fall', placeholder: '0.000', disabled: true },
-                        { label: 'RL', field: 'rl', placeholder: '0.000', disabled: true },
-                        { label: 'Remarks', field: 'remarks', placeholder: 'Remarks', disabled: false },
-                      ] as const).map(({ label, field, placeholder, disabled }) => (
+                        { label: 'Station', field: 'station', placeholder: 'e.g. BM1' },
+                        { label: 'BS', field: 'bs', placeholder: '0.000' },
+                        { label: 'FS', field: 'fs', placeholder: '0.000' },
+                        { label: 'TBM', field: 'tbm', placeholder: '0.000' },
+                        { label: 'Elevation', field: 'elev', placeholder: '0.000' },
+                        { label: 'HI', field: 'hi', placeholder: '0.000' },
+                      ] as const).map(({ label, field, placeholder }) => (
                         <div className="di-row-card-field" key={field}>
                           <span className="di-row-card-label">{label}</span>
                           <input
@@ -305,7 +252,6 @@ const DataInputPage: React.FC = () => {
                             value={row[field]}
                             onChange={(e) => updateRow(row.id, field, e.target.value)}
                             placeholder={placeholder}
-                            disabled={disabled}
                           />
                         </div>
                       ))}
@@ -318,28 +264,22 @@ const DataInputPage: React.FC = () => {
                     <tr>
                       <th>Station</th>
                       <th>BS</th>
-                      <th>IS</th>
                       <th>FS</th>
+                      <th>TBM</th>
+                      <th>Elevation</th>
                       <th>HI</th>
-                      <th>Rise</th>
-                      <th>Fall</th>
-                      <th>RL</th>
-                      <th>Remarks</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map(row => (
                       <tr key={row.id}>
-                        <td><input type="text" value={row.station} onChange={(e) => updateRow(row.id, 'station', e.target.value)} placeholder="Station" /></td>
+                        <td><input type="text" value={row.station} onChange={(e) => updateRow(row.id, 'station', e.target.value)} placeholder="e.g. BM1" /></td>
                         <td><input type="text" value={row.bs} onChange={(e) => updateRow(row.id, 'bs', e.target.value)} placeholder="0.000" /></td>
-                        <td><input type="text" value={row.is} onChange={(e) => updateRow(row.id, 'is', e.target.value)} placeholder="0.000" /></td>
                         <td><input type="text" value={row.fs} onChange={(e) => updateRow(row.id, 'fs', e.target.value)} placeholder="0.000" /></td>
-                        <td><input type="text" value={row.hi} onChange={(e) => updateRow(row.id, 'hi', e.target.value)} placeholder="0.000" disabled /></td>
-                        <td><input type="text" value={row.rise} onChange={(e) => updateRow(row.id, 'rise', e.target.value)} placeholder="0.000" disabled /></td>
-                        <td><input type="text" value={row.fall} onChange={(e) => updateRow(row.id, 'fall', e.target.value)} placeholder="0.000" disabled /></td>
-                        <td><input type="text" value={row.rl} onChange={(e) => updateRow(row.id, 'rl', e.target.value)} placeholder="0.000" disabled /></td>
-                        <td><input type="text" value={row.remarks} onChange={(e) => updateRow(row.id, 'remarks', e.target.value)} placeholder="Remarks" /></td>
+                        <td><input type="text" value={row.tbm} onChange={(e) => updateRow(row.id, 'tbm', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.elev} onChange={(e) => updateRow(row.id, 'elev', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.hi} onChange={(e) => updateRow(row.id, 'hi', e.target.value)} placeholder="0.000" /></td>
                         <td><button className="di-btn-delete" onClick={() => deleteRow(row.id)} disabled={rows.length === 1}>×</button></td>
                       </tr>
                     ))}
