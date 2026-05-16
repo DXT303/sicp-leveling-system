@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DataInput.css';
+import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
@@ -186,52 +187,7 @@ const DataInputPage: React.FC = () => {
 
   return (
     <div className="di-page">
-      {/* Sidebar */}
-      <aside className={`di-sidebar ${sidebarExpanded ? 'expanded' : ''}`}
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      >
-        <div>
-          <div className="di-sidebar-header">
-            <span className="di-sidebar-title">LOGO</span>
-          </div>
-          <nav className="di-nav">
-            <div className="di-nav-item" onClick={() => window.location.href = '/dashboard'}>
-              <span className="di-nav-icon"><IconDashboard /></span>
-              <span className="di-nav-label">Dashboard</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item di-nav-active">
-              <span className="di-nav-icon"><IconDataInput /></span>
-              <span className="di-nav-label">Data Input</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item" onClick={() => window.location.href = '/computation'}>
-              <span className="di-nav-icon"><IconComputation /></span>
-              <span className="di-nav-label">Computation</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item" onClick={() => window.location.href = '/calibration'}>
-              <span className="di-nav-icon"><IconCalibration /></span>
-              <span className="di-nav-label">Calibration</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-            <div className="di-nav-item" onClick={() => window.location.href = '/reports'}>
-              <span className="di-nav-icon"><IconReports /></span>
-              <span className="di-nav-label">Reports</span>
-              <span className="di-nav-chevron">›</span>
-            </div>
-          </nav>
-        </div>
-
-        <div className="di-user">
-          <div className="di-user-avatar">R</div>
-          <div className="di-user-info">
-            <span className="di-user-name">Ronald Talagtag</span>
-            <span className="di-user-role">Engineer</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activePath="/data-input" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}
       <main className="di-main">

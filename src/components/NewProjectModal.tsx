@@ -4,9 +4,10 @@ import './NewProjectModal.css';
 interface NewProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave: (data: { projectName: string; instrument: string; bmElevation: string; method: string; distanceK: string }) => void;
 }
 
-const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose }) => {
+const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     projectName: '',
     instrument: 'Auto Level',
@@ -32,7 +33,8 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose }) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('New project:', formData);
+    onSave(formData);
+    setFormData({ projectName: '', instrument: 'Auto Level', bmElevation: '', method: 'Hi Method (Height of Instrument)', distanceK: '' });
     onClose();
   };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Computation.css';
+import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
@@ -172,52 +173,7 @@ const ComputationPage: React.FC = () => {
 
   return (
     <div className="comp-page">
-      {/* Sidebar */}
-      <aside className={`comp-sidebar ${sidebarExpanded ? 'expanded' : ''}`}
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      >
-        <div>
-          <div className="comp-sidebar-header">
-            <span className="comp-sidebar-title">LOGO</span>
-          </div>
-          <nav className="comp-nav">
-            <div className="comp-nav-item" onClick={() => window.location.href = '/dashboard'}>
-              <span className="comp-nav-icon"><IconDashboard /></span>
-              <span className="comp-nav-label">Dashboard</span>
-              <span className="comp-nav-chevron">›</span>
-            </div>
-            <div className="comp-nav-item" onClick={() => window.location.href = '/data-input'}>
-              <span className="comp-nav-icon"><IconDataInput /></span>
-              <span className="comp-nav-label">Data Input</span>
-              <span className="comp-nav-chevron">›</span>
-            </div>
-            <div className="comp-nav-item comp-nav-active">
-              <span className="comp-nav-icon"><IconComputation /></span>
-              <span className="comp-nav-label">Computation</span>
-              <span className="comp-nav-chevron">›</span>
-            </div>
-            <div className="comp-nav-item" onClick={() => window.location.href = '/calibration'}>
-              <span className="comp-nav-icon"><IconCalibration /></span>
-              <span className="comp-nav-label">Calibration</span>
-              <span className="comp-nav-chevron">›</span>
-            </div>
-            <div className="comp-nav-item" onClick={() => window.location.href = '/reports'}>
-              <span className="comp-nav-icon"><IconReports /></span>
-              <span className="comp-nav-label">Reports</span>
-              <span className="comp-nav-chevron">›</span>
-            </div>
-          </nav>
-        </div>
-
-        <div className="comp-user">
-          <div className="comp-user-avatar">R</div>
-          <div className="comp-user-info">
-            <span className="comp-user-name">Ronald Talagtag</span>
-            <span className="comp-user-role">Engineer</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activePath="/computation" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}
       <main className="comp-main">

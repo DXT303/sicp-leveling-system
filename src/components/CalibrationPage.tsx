@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Calibration.css';
+import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
 const IconDashboard = () => (
@@ -169,52 +170,7 @@ const CalibrationPage: React.FC = () => {
 
   return (
     <div className="cal-page">
-      {/* Sidebar */}
-      <aside className={`cal-sidebar ${sidebarExpanded ? 'expanded' : ''}`}
-        onMouseEnter={() => setSidebarExpanded(true)}
-        onMouseLeave={() => setSidebarExpanded(false)}
-      >
-        <div>
-          <div className="cal-sidebar-header">
-            <span className="cal-sidebar-title">LOGO</span>
-          </div>
-          <nav className="cal-nav">
-            <div className="cal-nav-item" onClick={() => window.location.href = '/dashboard'}>
-              <span className="cal-nav-icon"><IconDashboard /></span>
-              <span className="cal-nav-label">Dashboard</span>
-              <span className="cal-nav-chevron">›</span>
-            </div>
-            <div className="cal-nav-item" onClick={() => window.location.href = '/data-input'}>
-              <span className="cal-nav-icon"><IconDataInput /></span>
-              <span className="cal-nav-label">Data Input</span>
-              <span className="cal-nav-chevron">›</span>
-            </div>
-            <div className="cal-nav-item" onClick={() => window.location.href = '/computation'}>
-              <span className="cal-nav-icon"><IconComputation /></span>
-              <span className="cal-nav-label">Computation</span>
-              <span className="cal-nav-chevron">›</span>
-            </div>
-            <div className="cal-nav-item cal-nav-active">
-              <span className="cal-nav-icon"><IconCalibration /></span>
-              <span className="cal-nav-label">Calibration</span>
-              <span className="cal-nav-chevron">›</span>
-            </div>
-            <div className="cal-nav-item" onClick={() => window.location.href = '/reports'}>
-              <span className="cal-nav-icon"><IconReports /></span>
-              <span className="cal-nav-label">Reports</span>
-              <span className="cal-nav-chevron">›</span>
-            </div>
-          </nav>
-        </div>
-
-        <div className="cal-user">
-          <div className="cal-user-avatar">R</div>
-          <div className="cal-user-info">
-            <span className="cal-user-name">Ronald Talagtag</span>
-            <span className="cal-user-role">Engineer</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar activePath="/calibration" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}
       <main className="cal-main">
