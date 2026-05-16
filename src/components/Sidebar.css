@@ -22,8 +22,28 @@
 .sb-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 24px 20px 0;
   overflow: hidden;
+  min-height: 48px;
+}
+
+.sb-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #9197B3;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.sb-toggle:hover {
+  background: #FFF4EC;
+  color: #FF8D28;
 }
 
 .sb-title {

@@ -9,6 +9,11 @@ const IconDashboard = () => (
     <rect x="14" y="14" width="7" height="7" rx="1.5"/>
   </svg>
 );
+const IconProjects = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M3 7h18M3 12h18M3 17h18"/>
+  </svg>
+);
 const IconDataInput = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="3"/>
@@ -33,19 +38,15 @@ const IconReports = () => (
     <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
   </svg>
 );
-const IconProjects = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M3 7h18M3 12h18M3 17h18"/>
-  </svg>
-);
+
 
 const NAV_ITEMS = [
   { label: 'Dashboard',   icon: <IconDashboard />,   path: '/dashboard'   },
+  { label: 'Projects',    icon: <IconProjects />,    path: '/projects'    },
   { label: 'Data Input',  icon: <IconDataInput />,   path: '/data-input'  },
   { label: 'Computation', icon: <IconComputation />, path: '/computation' },
   { label: 'Calibration', icon: <IconCalibration />, path: '/calibration' },
   { label: 'Reports',     icon: <IconReports />,     path: '/reports'     },
-  { label: 'Projects',    icon: <IconProjects />,    path: '/projects'    },
 ];
 
 interface SidebarProps {
@@ -54,17 +55,26 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [pinned, setPinned] = useState(true);
+  const [hovered, setHovered] = useState(false);
+  const expanded = pinned || hovered;
 
   return (
     <aside
       className={`sb-sidebar ${expanded ? 'expanded' : ''}`}
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div>
         <div className="sb-header">
           <span className="sb-title">LOGO</span>
+          <button
+            className="sb-toggle"
+            onClick={() => setPinned(p => !p)}
+            title={pinned ? 'Collapse sidebar' : 'Pin sidebar open'}
+          >
+            {pinned ? '«' : '»'}
+          </button>
         </div>
         <nav className="sb-nav">
           {NAV_ITEMS.map((item) => {
