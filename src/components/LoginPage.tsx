@@ -49,22 +49,27 @@ const LoginPage: React.FC = () => {
     if (!validate()) return;
     setIsLoading(true);
     
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Hardcoded credentials for demo (change as needed)
-      const VALID_EMAIL = 'admin@example.com';
-      const VALID_PASSWORD = 'password123';
-      
-      if (formData.email === VALID_EMAIL && formData.password === VALID_PASSWORD) {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
         sessionStorage.setItem('isLoggedIn', 'true');
         setShowSuccess(true);
         setTimeout(() => window.location.replace('/dashboard'), 1500);
       } else {
-        setErrorMsg('Invalid email or password.');
+        setErrorMsg(data.message || 'Invalid email or password.');
         setShowError(true);
       }
+    } catch {
+      setErrorMsg('Something went wrong. Please try again.');
+      setShowError(true);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (

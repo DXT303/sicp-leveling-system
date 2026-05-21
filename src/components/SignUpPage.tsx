@@ -64,15 +64,26 @@ const SignUpPage: React.FC = () => {
     if (!validate()) return;
     setIsLoading(true);
     
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // For demo purposes, always succeed
-      setShowSuccess(true);
-      setTimeout(() => {
-        window.location.replace('/');
-      }, 1500);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setShowSuccess(true);
+        setTimeout(() => window.location.replace('/'), 1500);
+      } else {
+        setShowError(true);
+        setErrors({ email: data.message || 'Registration failed.' });
+      }
+    } catch (error) {
+      setShowError(true);
+      setErrors({ email: 'Something went wrong. Please try again.' });
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
