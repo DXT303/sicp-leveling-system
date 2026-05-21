@@ -20,11 +20,15 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const methodRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpenDropdown(null);
+        setOpenDropdown(prev => prev === 'instrument' ? null : prev);
+      }
+      if (methodRef.current && !methodRef.current.contains(event.target as Node)) {
+        setOpenDropdown(prev => prev === 'method' ? null : prev);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -137,7 +141,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
             />
           </div>
 
-          <div className="new-project-field">
+          <div className="new-project-field" ref={methodRef}>
             <label>Method</label>
             <div className="custom-dropdown">
               <div 

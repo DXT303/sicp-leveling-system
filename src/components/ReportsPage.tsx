@@ -1,98 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import './Reports.css';
+import './NewProjectModal.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
-const IconDashboard = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-  </svg>
-);
+interface CalibrationRecord {
+  id: number;
+  project_id: number | null;
+  instrument: string | null;
+  date: string;
+  d1_near: number;
+  d1_far: number;
+  d2_near: number;
+  d2_far: number;
+  error: number;
+  status: string;
+  created_at: string;
+}
 
-const IconDataInput = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M12 5v14M5 12h14"/>
-    <rect x="3" y="3" width="18" height="18" rx="3"/>
-  </svg>
-);
-
-const IconComputation = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M9 7h6M9 12h6M9 17h4"/>
-    <rect x="3" y="3" width="18" height="18" rx="3"/>
-  </svg>
-);
-
-const IconCalibration = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <circle cx="12" cy="12" r="9"/>
-    <circle cx="12" cy="12" r="3"/>
-    <line x1="12" y1="3" x2="12" y2="6"/>
-    <line x1="12" y1="18" x2="12" y2="21"/>
-    <line x1="3" y1="12" x2="6" y2="12"/>
-    <line x1="18" y1="12" x2="21" y2="12"/>
-  </svg>
-);
-
-const IconReports = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-    <line x1="8" y1="13" x2="16" y2="13"/>
-    <line x1="8" y1="17" x2="13" y2="17"/>
-  </svg>
-);
+interface Project {
+  id: number;
+  name: string;
+  progress: number;
+  status: string;
+}
 
 const ReportsPage: React.FC = () => {
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('isLoggedIn') === 'true';
-  });
+  const [calibrations, setCalibrations] = useState<CalibrationRecord[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filter, setFilter] = useState<'All' | 'Leveling' | 'Calibration'>('All');
+  const [toast, setToast] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    sessionStorage.getItem('isLoggedIn') === 'true'
+  );
 
   useEffect(() => {
-    document.body.style.zoom = '80%';
-
     const checkAuth = () => {
-      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-      if (!isLoggedIn) {
+      if (!sessionStorage.getItem('isLoggedIn')) {
         setIsAuthenticated(false);
         window.location.replace('/');
-        return;
       }
     };
-
     checkAuth();
     window.history.pushState(null, '', window.location.href);
-
     const handlePopState = () => {
-      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-      if (!isLoggedIn) {
+      if (!sessionStorage.getItem('isLoggedIn')) {
         setIsAuthenticated(false);
         window.location.replace('/');
       } else {
         window.history.pushState(null, '', window.location.href);
       }
     };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        checkAuth();
-      }
-    };
-
     window.addEventListener('popstate', handlePopState);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.body.style.zoom = '100%';
-      window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const fetchData = () => {
+    fetch('/api/calibrations').then(r => r.json()).then(setCalibrations).catch(console.error);
+    fetch('/api/projects').then(r => r.json()).then(setProjects).catch(console.error);
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetchData();
+    const handleVisibility = () => { if (document.visibilityState === 'visible') fetchData(); };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', fetchData);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', fetchData);
+    };
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     setShowLogoutModal(false);
@@ -102,21 +81,86 @@ const ReportsPage: React.FC = () => {
     window.location.replace('/');
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  const handleDelete = async (id: number) => {
+    if (!confirm('Delete this calibration record?')) return;
+    await fetch(`/api/calibrations/${id}`, { method: 'DELETE' });
+    setCalibrations(prev => prev.filter(c => c.id !== id));
+  };
 
-  const reports = [
-    { id: 1, name: 'Survey A — Sector 4 Report', date: '2024-01-15', type: 'Leveling', status: 'Completed', size: '2.4 MB' },
-    { id: 2, name: 'Calibration Unit 7 Report', date: '2024-01-12', type: 'Calibration', status: 'Pending', size: '1.8 MB' },
-    { id: 3, name: 'Two-Peg Test — Unit 3 Report', date: '2024-01-10', type: 'Calibration', status: 'Pending', size: '1.2 MB' },
-  ];
+  const handleMarkComplete = async (projectId: number) => {
+    await fetch(`/api/projects/${projectId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ progress: 100, status: 'completed' }),
+    });
+    setToast('Project marked as completed!');
+    setTimeout(() => setToast(null), 1500);
+    fetchData();
+  };
+
+  if (!isAuthenticated) return null;
+
+  // Build unified report rows from projects (Leveling) + calibrations
+  type ReportRow = {
+    id: string;
+    name: string;
+    date: string;
+    type: 'Leveling' | 'Calibration';
+    status: string;
+    projectId?: number;
+    calibrationId?: number;
+  };
+
+  // One row per project showing overall workflow status
+  const levelingRows: ReportRow[] = projects.map(p => {
+    const cal = calibrations.find(c => c.project_id === p.id);
+    return {
+      id: `p-${p.id}`,
+      name: `${p.name} — Leveling Report`,
+      date: cal?.date ?? '',
+      type: 'Leveling',
+      status: p.progress === 100 ? 'Completed' : p.progress >= 25 ? 'In Progress' : 'Pending',
+      projectId: p.id,
+    };
+  });
+
+  // Only standalone calibrations (not linked to any project)
+  const calibrationRows: ReportRow[] = calibrations
+    .filter(c => c.project_id === null)
+    .map(c => ({
+      id: `c-${c.id}`,
+      name: `Calibration — ${c.instrument ?? 'N/A'} (${c.date})`,
+      date: c.date,
+      type: 'Calibration',
+      status: c.status === 'PASS' ? 'Completed' : 'Failed',
+      calibrationId: c.id,
+    }));
+
+  const allRows: ReportRow[] = [...levelingRows, ...calibrationRows];
+  const filtered = filter === 'All' ? allRows : allRows.filter(r => r.type === filter);
+
+  const total = allRows.length;
+  const completed = allRows.filter(r => r.status === 'Completed').length;
+  const pending = allRows.filter(r => r.status !== 'Completed').length;
 
   return (
     <div className="rep-page">
+      {toast && (
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            <div className="ep-notif-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle className="ep-notif-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="ep-notif-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+            </div>
+            <h2 className="ep-notif-title--success">Completed!</h2>
+            <p className="ep-notif-message">{toast}</p>
+          </div>
+        </div>
+      )}
       <Sidebar activePath="/reports" onLogout={() => setShowLogoutModal(true)} />
 
-      {/* Main */}
       <main className="rep-main">
         <div className="rep-content">
           <div className="rep-header">
@@ -132,57 +176,37 @@ const ReportsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Access */}
-          <div className="rep-quick-card">
-            <h2 className="rep-card-title">Quick Access</h2>
-            <div className="rep-quick-grid">
-              <div className="rep-quick-item">
-                <div className="rep-quick-icon">➕</div>
-                <span>Generate Report</span>
-              </div>
-              <div className="rep-quick-item">
-                <div className="rep-quick-icon">📊</div>
-                <span>View Analytics</span>
-              </div>
-              <div className="rep-quick-item">
-                <div className="rep-quick-icon">📁</div>
-                <span>Export All</span>
-              </div>
-              <div className="rep-quick-item">
-                <div className="rep-quick-icon">🗂️</div>
-                <span>Archive</span>
-              </div>
-            </div>
-          </div>
-
           {/* Stats */}
           <div className="rep-stats">
             <div className="rep-stat-card">
               <div className="rep-stat-icon">📋</div>
               <div>
-                <p className="rep-stat-value">3</p>
+                <p className="rep-stat-value">{total}</p>
                 <p className="rep-stat-label">Total Reports</p>
               </div>
             </div>
             <div className="rep-stat-card">
               <div className="rep-stat-icon">✅</div>
               <div>
-                <p className="rep-stat-value">1</p>
+                <p className="rep-stat-value">{completed}</p>
                 <p className="rep-stat-label">Completed</p>
               </div>
             </div>
             <div className="rep-stat-card">
               <div className="rep-stat-icon">⏳</div>
               <div>
-                <p className="rep-stat-value">2</p>
-                <p className="rep-stat-label">Pending</p>
+                <p className="rep-stat-value">{pending}</p>
+                <p className="rep-stat-label">Pending / In Progress</p>
               </div>
             </div>
             <div className="rep-stat-card">
-              <div className="rep-stat-icon">📊</div>
+              <div className="rep-stat-icon">🎯</div>
               <div>
-                <p className="rep-stat-value">5.4 MB</p>
-                <p className="rep-stat-label">Total Size</p>
+                <p className="rep-stat-value">{projects.filter(p => {
+                  const cal = calibrations.find(c => c.project_id === p.id);
+                  return cal?.status === 'PASS';
+                }).length + calibrations.filter(c => c.project_id === null && c.status === 'PASS').length}</p>
+                <p className="rep-stat-label">Calibrations Passed</p>
               </div>
             </div>
           </div>
@@ -190,56 +214,78 @@ const ReportsPage: React.FC = () => {
           {/* Reports Table */}
           <div className="rep-table-card">
             <div className="rep-table-header">
-              <h2>Recent Reports</h2>
+              <h2>All Reports</h2>
               <div className="rep-filters">
-                <button className="rep-filter-btn active">All</button>
-                <button className="rep-filter-btn">Leveling</button>
-                <button className="rep-filter-btn">Calibration</button>
-                <button className="rep-filter-btn">Analysis</button>
+                {(['All', 'Leveling', 'Calibration'] as const).map(f => (
+                  <button
+                    key={f}
+                    className={`rep-filter-btn${filter === f ? ' active' : ''}`}
+                    onClick={() => setFilter(f)}
+                  >{f}</button>
+                ))}
               </div>
             </div>
 
             <div className="rep-table-wrapper">
-              <table className="rep-table">
-                <thead>
-                  <tr>
-                    <th>Report Name</th>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Size</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reports.map((report) => (
-                    <tr key={report.id}>
-                      <td className="rep-name">{report.name}</td>
-                      <td>{report.date}</td>
-                      <td>
-                        <span className="rep-type-badge">{report.type}</span>
-                      </td>
-                      <td>
-                        <span className={`rep-status ${report.status.toLowerCase()}`}>
-                          {report.status}
-                        </span>
-                      </td>
-                      <td>{report.size}</td>
-                      <td>
-                        <div className="rep-actions">
-                          <button className="rep-action-btn">👁️</button>
-                          <button className="rep-action-btn">⬇️</button>
-                          <button className="rep-action-btn">🗑️</button>
-                        </div>
-                      </td>
+              {filtered.length === 0 ? (
+                <p style={{ padding: '24px', color: '#9197B3', textAlign: 'center' }}>No reports yet. Complete a project workflow to generate reports.</p>
+              ) : (
+                <table className="rep-table">
+                  <thead>
+                    <tr>
+                      <th>Report Name</th>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map((row) => (
+                      <tr key={row.id}>
+                        <td className="rep-name">{row.name}</td>
+                        <td>{row.date || '—'}</td>
+                        <td><span className="rep-type-badge">{row.type}</span></td>
+                        <td>
+                          <span className={`rep-status ${row.status.toLowerCase().replace(' ', '-')}`}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="rep-actions">
+                            {row.type === 'Leveling' && row.projectId && (
+                              <button
+                                className="rep-action-btn"
+                                title="Open project"
+                                onClick={() => window.location.href = `/data-input?projectId=${row.projectId}`}
+                              >👁️</button>
+                            )}
+                            {row.type === 'Leveling' && row.projectId && row.status !== 'Completed' && (
+                              <button
+                                className="rep-action-btn"
+                                title="Mark as complete"
+                                onClick={() => handleMarkComplete(row.projectId!)}
+                              >✅</button>
+                            )}
+                            {row.type === 'Calibration' && row.calibrationId && (
+                              <button
+                                className="rep-action-btn"
+                                title="Delete calibration record"
+                                onClick={() => handleDelete(row.calibrationId!)}
+                              >🗑️</button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
       </main>
+
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

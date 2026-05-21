@@ -19,7 +19,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
   });
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const showToast = (type: "success" | "error", msg: string) => {
     setToast({ type, msg });
@@ -28,7 +28,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
+      if (containerRef.current && !containerRef.current.contains(e.target as Node))
         setOpenDropdown(null);
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -47,7 +47,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
   };
 
   const Dropdown = ({ field, options }: { field: "instrument" | "method" | "status"; options: string[] }) => (
-    <div className="custom-dropdown" ref={field === "instrument" ? dropdownRef : undefined}>
+    <div className="custom-dropdown">
       <div className="custom-dropdown-selected" onClick={() => setOpenDropdown(openDropdown === field ? null : field)}>
         {form[field]}
         <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
@@ -93,7 +93,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
         </div>
       )}
       <div className="new-project-overlay" onClick={toast ? undefined : onClose}>
-      <div className="new-project-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="new-project-modal" ref={containerRef} onClick={(e) => e.stopPropagation()}>
         <div className="new-project-header">
           <h2>Edit Project</h2>
           <button className="new-project-close" onClick={onClose}>×</button>

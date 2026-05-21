@@ -121,42 +121,82 @@ app.delete('/api/projects/:id', async (req, res) => {
 
 // ── Leveling Rows ──
 app.get('/api/projects/:id/rows', async (req, res) => {
-  const result = await db.execute({
-    sql: 'SELECT * FROM leveling_rows WHERE project_id = ? ORDER BY row_order',
-    args: [req.params.id],
-  });
-  res.json(toObjects(result));
+  try {
+    const result = await db.execute({
+      sql: 'SELECT * FROM leveling_rows WHERE project_id = ? ORDER BY row_order',
+      args: [req.params.id],
+    });
+    res.json(toObjects(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.post('/api/projects/:id/rows', async (req, res) => {
-  const { station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order } = req.body;
-  const result = await db.execute({
-    sql: `INSERT INTO leveling_rows (project_id, station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
-    args: [req.params.id, station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order ?? 0],
-  });
-  res.json(toObject(result));
+  try {
+    const { station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order } = req.body;
+    const result = await db.execute({
+      sql: `INSERT INTO leveling_rows (project_id, station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+      args: [
+        req.params.id,
+        station  ?? null,
+        bs       ?? null,
+        is_val   ?? null,
+        fs       ?? null,
+        hi       ?? null,
+        rise     ?? null,
+        fall     ?? null,
+        rl       ?? null,
+        remarks  ?? null,
+        row_order ?? 0,
+      ],
+    });
+    res.json(toObject(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.delete('/api/projects/:id/rows', async (req, res) => {
-  await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [req.params.id] });
-  res.json({ success: true });
+  try {
+    await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [req.params.id] });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // ── Calibrations ──
 app.get('/api/calibrations', async (req, res) => {
-  const result = await db.execute('SELECT * FROM calibrations ORDER BY created_at DESC');
-  res.json(toObjects(result));
+  try {
+    const result = await db.execute('SELECT * FROM calibrations ORDER BY created_at DESC');
+    res.json(toObjects(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.post('/api/calibrations', async (req, res) => {
-  const { project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status } = req.body;
-  const result = await db.execute({
-    sql: `INSERT INTO calibrations (project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
-    args: [project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status],
-  });
-  res.json(toObject(result));
+  try {
+    const { project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method } = req.body;
+    const result = await db.execute({
+      sql: `INSERT INTO calibrations (project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+      args: [
+        project_id ?? null,
+        instrument ?? null,
+        date       ?? null,
+        d1_near    ?? null,
+        d1_far     ?? null,
+        d2_near    ?? null,
+        d2_far     ?? null,
+        error      ?? null,
+        status     ?? null,
+        method     ?? null,
+      ],
+    });
+    res.json(toObject(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.delete('/api/calibrations/:id', async (req, res) => {
+  try {
+    await db.execute({ sql: 'DELETE FROM calibrations WHERE id = ?', args: [req.params.id] });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // ── Activity Logs ──

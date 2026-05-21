@@ -2,8 +2,9 @@ import * as m001 from './migrations/001_initial_schema.js';
 import * as m002 from './migrations/002_projects_add_fields.js';
 import * as m003 from './migrations/003_activity_logs_add_details.js';
 import * as m004 from './migrations/004_leveling_rows_index.js';
+import * as m005 from './migrations/005_calibrations_add_method.js';
 
-const ALL_MIGRATIONS = [m001, m002, m003, m004];
+const ALL_MIGRATIONS = [m001, m002, m003, m004, m005];
 
 export async function runMigrations(db) {
   // Ensure migrations tracking table exists

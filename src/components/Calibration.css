@@ -294,13 +294,13 @@ body {
 /* ========== MAIN ========== */
 .cal-main {
   flex: 1;
-  padding: 32px 40px 60px;
+  padding: 0 40px 60px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
   z-index: 2;
 }
@@ -319,7 +319,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
+  padding: 32px 0 20px;
+  margin: 0;
 }
 
 .cal-title {
@@ -731,7 +736,8 @@ body {
 
   .cal-main {
     padding: 16px 16px 80px;
-    min-height: unset;
+    height: auto;
+    overflow-y: auto;
   }
 
   .cal-title {
