@@ -142,10 +142,11 @@ app.post('/api/logs', async (req, res) => {
   res.json(result.rows[0]);
 });
 
-// ── Start ──
-initSchema()
-  .then(() => app.listen(3001, () => console.log('API server running on port 3001')))
-  .catch((err) => {
-    console.error('❌ Failed to initialize database:', err.message);
-    process.exit(1);
-  });
+// ── Start (local) / Export (Vercel) ──
+initSchema().catch(err => console.error('Schema init failed:', err.message));
+
+if (!process.env.VERCEL) {
+  app.listen(3001, () => console.log('API server running on port 3001'));
+}
+
+export default app;
