@@ -270,22 +270,24 @@ const DashboardPage: React.FC = () => {
               <h2 className="db-card-title" style={{ marginBottom: 0 }}>Activity logs</h2>
               <div className="db-logs-search">🔍 Search</div>
             </div>
-            {logs.length === 0 ? (
-              <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No activity yet.</p>
-            ) : (
-              logs.slice(0, 6).map((log) => (
-                <div className="db-log-item" key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
-                  <div className="db-log-dot" style={{ background: dotColor(log.type) }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className="db-log-title">{log.message}</p>
-                    <p className="db-log-sub">{log.sub ?? log.type}</p>
+            <div className="db-logs-container">
+              {logs.length === 0 ? (
+                <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No activity yet.</p>
+              ) : (
+                logs.slice(0, 6).map((log) => (
+                  <div className="db-log-item" key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
+                    <div className="db-log-dot" style={{ background: dotColor(log.type) }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p className="db-log-title">{log.message}</p>
+                      <p className="db-log-sub">{log.sub ?? log.type}</p>
+                    </div>
+                    {log.details && (
+                      <span style={{ fontSize: 11, color: '#0088FF', flexShrink: 0, alignSelf: 'center' }}>View ›</span>
+                    )}
                   </div>
-                  {log.details && (
-                    <span style={{ fontSize: 11, color: '#0088FF', flexShrink: 0, alignSelf: 'center' }}>View ›</span>
-                  )}
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
 
             {/* Legend */}
             <div className="db-legend">
