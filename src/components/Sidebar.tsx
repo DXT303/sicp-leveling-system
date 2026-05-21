@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Sidebar.css';
 
 const IconDashboard = () => (
@@ -49,17 +49,37 @@ const NAV_ITEMS = [
   { label: 'Reports',     icon: <IconReports />,     path: '/reports'     },
 ];
 
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard':   'Dashboard — Survey Leveling',
+  '/projects':    'Projects — Survey Leveling',
+  '/data-input':  'Data Input — Survey Leveling',
+  '/computation': 'Computation — Survey Leveling',
+  '/calibration': 'Calibration — Survey Leveling',
+  '/reports':     'Reports — Survey Leveling',
+};
+
 interface SidebarProps {
   activePath: string;
   onLogout: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
-  const [pinned, setPinned] = useState(true);
+  const [pinned, setPinned] = useState(() => localStorage.getItem('sb_pinned') === 'true');
   const [hovered, setHovered] = useState(false);
   const expanded = pinned || hovered;
   const userName = sessionStorage.getItem('userName') || 'User';
   const avatarLetter = userName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    document.title = PAGE_TITLES[activePath] ?? 'Survey Leveling';
+  }, [activePath]);
+
+  const togglePin = () => {
+    setPinned(p => {
+      localStorage.setItem('sb_pinned', String(!p));
+      return !p;
+    });
+  };
 
   return (
     <aside
@@ -72,8 +92,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
           <span className="sb-title">LOGO</span>
           <button
             className="sb-toggle"
-            onClick={() => setPinned(p => !p)}
-            title={pinned ? 'Collapse sidebar' : 'Pin sidebar open'}
+            onClick={() => togglePin()}
+            title={pinned ? 'Unpin sidebar' : 'Pin sidebar open'}
           >
             {pinned ? '«' : '»'}
           </button>
