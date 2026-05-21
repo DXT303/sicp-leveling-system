@@ -1,5 +1,8 @@
-import React from "react";
-import { Project } from "./useProjects";
+import React, { useState } from 'react';
+import { Project } from './useProjects';
+import DataInputModal from './DataInputModal';
+import ComputationModal from './ComputationModal';
+import CalibrationModal from './CalibrationModal';
 
 interface Props {
   project: Project;
@@ -8,67 +11,120 @@ interface Props {
 }
 
 const statusColor: Record<string, string> = {
-  active: "#FF8D28",
-  completed: "#34C759",
-  pending: "#FFCC00",
+  active: '#FF8D28',
+  completed: '#34C759',
+  pending: '#FFCC00',
 };
 
-const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => (
-  <div className="new-project-overlay" onClick={onClose}>
-    <div className="new-project-modal" onClick={(e) => e.stopPropagation()}>
-      <div className="new-project-header">
-        <h2>Project Details</h2>
-        <button className="new-project-close" onClick={onClose}>×</button>
+const STEPS = [
+  { label: 'Data Input',  pct: 25,  desc: 'Enter leveling observations (BS, FS, IFS)' },
+  { label: 'Computation', pct: 50,  desc: 'Run differential leveling & closure check' },
+  { label: 'Calibration', pct: 75,  desc: 'Two-peg calibration test' },
+  { label: 'Report',      pct: 100, desc: 'Generate and export the final report' },
+];
+
+const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
+  const [progress, setProgress] = useState(project.progress ?? 0);
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+
+  const currentStep = STEPS.findIndex(s => s.pct > progress);
+  const activeIdx   = currentStep === -1 ? STEPS.length - 1 : currentStep;
+
+  const handleStepSaved = (newProgress: number) => {
+    setProgress(newProgress);
+    sessionStorage.setItem('activeProjectProgress', String(newProgress));
+    setActiveStep(null);
+  };
+
+  const openStep = (idx: number) => {
+    sessionStorage.setItem('activeProjectId', String(project.id));
+    sessionStorage.setItem('activeProjectProgress', String(progress));
+    if (idx === 3) {
+      // Report step — navigate to reports page
+      window.location.href = '/reports';
+      return;
+    }
+    setActiveStep(idx);
+  };
+
+  return (
+    <>
+      <div className="new-project-overlay" onClick={onClose}>
+        <div className="new-project-modal pdm-modal" onClick={e => e.stopPropagation()}>
+          <div className="new-project-header">
+            <h2>Project Details</h2>
+            <button className="new-project-close" onClick={onClose}>×</button>
+          </div>
+
+          {/* Info */}
+          <div className="pdm-info-row">
+            <div className="pdm-info-item"><span className="pdm-info-label">Name</span><span className="pdm-info-value">{project.name}</span></div>
+            <div className="pdm-info-item"><span className="pdm-info-label">Instrument</span><span className="pdm-info-value">{project.instrument}</span></div>
+            <div className="pdm-info-item"><span className="pdm-info-label">BM Elev.</span><span className="pdm-info-value">{project.bm_elevation} m</span></div>
+            <div className="pdm-info-item"><span className="pdm-info-label">Method</span><span className="pdm-info-value">{project.method}</span></div>
+            <div className="pdm-info-item"><span className="pdm-info-label">Distance K</span><span className="pdm-info-value">{project.distance_k} km</span></div>
+            <div className="pdm-info-item">
+              <span className="pdm-info-label">Status</span>
+              <span className="pl-status" style={{ background: statusColor[project.status] + '22', color: statusColor[project.status] }}>
+                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+              </span>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="pdm-progress-section">
+            <div className="pdm-progress-header">
+              <span className="pdm-progress-label">Overall Progress</span>
+              <span className="pdm-progress-pct">{progress}%</span>
+            </div>
+            <div className="pdm-progress-track">
+              <div className="pdm-progress-fill" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div className="pdm-steps">
+            {STEPS.map((step, idx) => {
+              const done   = progress >= step.pct;
+              const active = idx === activeIdx;
+              return (
+                <div key={step.label} className={`pdm-step ${done ? 'pdm-step-done' : ''} ${active ? 'pdm-step-active' : ''}`}>
+                  <div className="pdm-step-circle">{done ? '✓' : idx + 1}</div>
+                  <div className="pdm-step-body">
+                    <span className="pdm-step-label">{step.label}</span>
+                    <span className="pdm-step-desc">{step.desc}</span>
+                  </div>
+                  <button
+                    className={`pdm-step-btn ${done ? 'pdm-step-btn-done' : active ? 'pdm-step-btn-active' : 'pdm-step-btn-locked'}`}
+                    onClick={() => openStep(idx)}
+                    disabled={idx > activeIdx}
+                  >
+                    {done ? 'Review' : active ? 'Start →' : 'Locked'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="new-project-actions">
+            <button type="button" className="new-project-btn-cancel" onClick={onClose}>Close</button>
+            <button type="button" className="new-project-btn-create" onClick={onEdit}>Edit</button>
+          </div>
+        </div>
       </div>
 
-      <div className="new-project-field">
-        <label>Project Name</label>
-        <p style={{ margin: 0, padding: "10px 0", fontWeight: 600 }}>{project.name}</p>
-      </div>
-      <div className="new-project-field">
-        <label>Instrument</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.instrument}</p>
-      </div>
-      <div className="new-project-field">
-        <label>BM Elevation</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.bm_elevation} m</p>
-      </div>
-      <div className="new-project-field">
-        <label>Method</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.method}</p>
-      </div>
-      <div className="new-project-field">
-        <label>Distance K</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.distance_k} km</p>
-      </div>
-      <div className="new-project-field">
-        <label>Status</label>
-        <span
-          className="pl-status"
-          style={{ background: statusColor[project.status] + "22", color: statusColor[project.status] }}
-        >
-          {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-        </span>
-      </div>
-      <div className="new-project-field">
-        <label>Created</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.created_at}</p>
-      </div>
-
-      <div className="new-project-actions">
-        <button type="button" className="new-project-btn-cancel" onClick={onClose}>Close</button>
-        <button type="button" className="new-project-btn-create" onClick={onEdit}>Edit</button>
-        <button
-          type="button"
-          className="new-project-btn-create"
-          style={{ background: '#2563EB', borderColor: '#2563EB' }}
-          onClick={() => window.location.href = `/data-input?projectId=${project.id}`}
-        >
-          Open Data Input
-        </button>
-      </div>
-    </div>
-  </div>
-);
+      {/* Step modals rendered on top */}
+      {activeStep === 0 && (
+        <DataInputModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
+      )}
+      {activeStep === 1 && (
+        <ComputationModal projectId={project.id} onClose={() => setActiveStep(null)} onConfirmed={handleStepSaved} />
+      )}
+      {activeStep === 2 && (
+        <CalibrationModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
+      )}
+    </>
+  );
+};
 
 export default ProjectDetailModal;

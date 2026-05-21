@@ -85,7 +85,7 @@ const CustomDropdown: React.FC<{
   );
 };
 
-const CalibrationPage: React.FC = () => {
+const CalibrationPage: React.FC<{ projectId?: number | null }> = ({ projectId }) => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [instrument, setInstrument] = useState('');
   const [instrumentId, setInstrumentId] = useState('');
@@ -95,14 +95,15 @@ const CalibrationPage: React.FC = () => {
   const [b1, setB1] = useState('');
   const [b2, setB2] = useState('');
   const [distance, setDistance] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('isLoggedIn') === 'true';
   });
 
   useEffect(() => {
-    document.body.style.zoom = '80%';
-
     const checkAuth = () => {
       const isLoggedIn = sessionStorage.getItem('isLoggedIn');
       if (!isLoggedIn) {
@@ -135,7 +136,6 @@ const CalibrationPage: React.FC = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      document.body.style.zoom = '100%';
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -148,6 +148,17 @@ const CalibrationPage: React.FC = () => {
     localStorage.clear();
     window.location.replace('/');
   };
+
+  useEffect(() => {
+    if (!projectId) return;
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then((list: Record<string, unknown>[]) => {
+        const p = list.find(x => x.id === projectId);
+        if (p) setProjectName(String(p.name));
+      })
+      .catch(console.error);
+  }, [projectId]);
 
   if (!isAuthenticated) {
     return null;
@@ -179,7 +190,10 @@ const CalibrationPage: React.FC = () => {
       <main className="cal-main">
         <div className="cal-content">
           <div className="cal-header">
-            <h1 className="cal-title">Two-Peg Calibration Test</h1>
+            <div>
+              <h1 className="cal-title">Two-Peg Calibration Test</h1>
+              {projectName && <p style={{ margin: '4px 0 0', fontSize: 13, color: '#757575' }}>Project: <strong>{projectName}</strong></p>}
+            </div>
               <div className="cal-settings-wrapper">
                 <div className="cal-settings-icon" onClick={() => setShowLogoutModal(true)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -328,8 +342,50 @@ const CalibrationPage: React.FC = () => {
           </div>
 
           <div className="cal-actions">
-            <button className="cal-btn-clear">Clear All</button>
-            <button className="cal-btn-save">Save Calibration</button>
+            <button className="cal-btn-clear" onClick={() => {
+              setInstrument(''); setInstrumentId(''); setTestMethod('');
+              setA1(''); setA2(''); setB1(''); setB2(''); setDistance('');
+              setConfirmed(false);
+            }}>Clear All</button>
+            <button
+              className="cal-btn-save"
+              disabled={saving || confirmed || !results}
+              onClick={async () => {
+                if (!results) return;
+                setSaving(true);
+                try {
+                  await fetch('/api/calibrations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      project_id: projectId ?? null,
+                      instrument: instrument || instrumentId || null,
+                      date: new Date().toISOString().slice(0, 10),
+                      method: testMethod || null,
+                      d1_near: parseFloat(a1),
+                      d1_far:  parseFloat(a2),
+                      d2_near: parseFloat(b1),
+                      d2_far:  parseFloat(b2),
+                      error:   results.collimationError,
+                      status:  results.status,
+                    }),
+                  });
+                  if (projectId) {
+                    await fetch(`/api/projects/${projectId}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ progress: 75 }),
+                    });
+                    sessionStorage.setItem('activeProjectProgress', '75');
+                  }
+                  setConfirmed(true);
+                  if (projectId) setTimeout(() => window.location.href = `/reports`, 1200);
+                } catch { alert('Save failed.'); }
+                finally { setSaving(false); }
+              }}
+            >
+              {confirmed ? '✓ Saved — going to Reports…' : saving ? 'Saving…' : 'Save Calibration'}
+            </button>
           </div>
         </div>
       </main>

@@ -2,7 +2,8 @@
 
 .di-page {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
   font-family: 'Poppins', sans-serif;
 }
@@ -382,13 +383,13 @@
 /* ── Main ── */
 .di-main {
   flex: 1;
-  padding: 32px 40px 60px;
+  padding: 0 40px 60px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .di-content {
@@ -397,15 +398,19 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  flex: 1;
+  gap: 20px;
 }
 
 .di-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
+  padding: 32px 0 20px;
+  margin: 0;
 }
 
 .di-header-actions {
@@ -415,7 +420,7 @@
 }
 
 .di-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 500;
   color: #000000;
   margin: 0;
@@ -513,7 +518,7 @@
   background: #FFFFFF;
   border-radius: 20px;
   box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
-  padding: 32px;
+  padding: 28px 32px;
 }
 
 .di-table-header {
@@ -556,32 +561,47 @@
 .di-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
+.di-table th:nth-child(1), .di-table td:nth-child(1) { width: 110px; } /* STA */
+.di-table th:nth-child(2), .di-table td:nth-child(2) { width: 100px; } /* BS */
+.di-table th:nth-child(3), .di-table td:nth-child(3) { width: 110px; } /* HI */
+.di-table th:nth-child(4), .di-table td:nth-child(4) { width: 100px; } /* FS */
+.di-table th:nth-child(5), .di-table td:nth-child(5) { width: 100px; } /* IFS */
+.di-table th:nth-child(6), .di-table td:nth-child(6) { width: 110px; } /* ELEV */
+.di-table th:nth-child(7), .di-table td:nth-child(7) { width: 44px;  } /* delete */
+
 .di-table th {
-  background: #F5F5F5;
-  padding: 12px;
+  padding: 12px 8px;
   text-align: left;
   font-size: 13px;
   font-weight: 600;
-  color: #000000;
-  border-bottom: 2px solid #E0E0E0;
+  color: #9197B3;
+  border-bottom: 2px solid #F0F0F0;
+  white-space: nowrap;
 }
 
 .di-table td {
-  padding: 8px;
-  border-bottom: 1px solid #F0F0F0;
+  padding: 10px 8px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #F5F5F7;
 }
+
+.di-table tbody tr:hover { background: #FAFAFA; }
 
 .di-table input {
   width: 100%;
-  padding: 8px 12px;
+  box-sizing: border-box;
+  padding: 8px 10px;
   border: 1px solid #D9D9D9;
   border-radius: 6px;
   font-family: 'Poppins', sans-serif;
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s;
+  min-width: 0;
 }
 
 .di-table input:focus {
@@ -755,14 +775,14 @@
 
   .di-main {
     padding: 16px 16px 80px;
-    min-height: unset;
+    height: auto;
+    overflow-y: auto;
   }
 
   .di-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-    margin-bottom: 16px;
   }
 
   .di-title {

@@ -2,8 +2,9 @@
 
 .db-page {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
+  overflow: hidden;
   background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
   font-family: 'Poppins', sans-serif;
 }
@@ -11,6 +12,7 @@
 body, html, #root {
   height: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
 /* ── Sidebar ── */
@@ -395,13 +397,13 @@ body, html, #root {
 /* ── Main ── */
 .db-main {
   flex: 1;
-  padding: 32px 40px 60px;
+  padding: 0 40px 60px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
   z-index: 2;
 }
@@ -416,11 +418,16 @@ body, html, #root {
   flex: 1;
 }
 
-/* ── Header ── */
 .db-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
+  padding: 32px 0 20px;
+  margin: 0;
 }
 
 .db-header-right {
@@ -805,7 +812,8 @@ body, html, #root {
 
   .db-main {
     padding: 16px 16px 80px;
-    min-height: unset;
+    height: auto;
+    overflow-y: auto;
   }
 
   .db-greeting {

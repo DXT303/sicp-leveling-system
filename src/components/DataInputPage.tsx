@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DataInput.css';
+import './NewProjectModal.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 
@@ -160,6 +161,7 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
   const [rows, setRows] = useState<LevelingRow[]>([{ id: Date.now(), station: 'BM1', bs: '', fs: '', ifs: '', hi: '', elev: '' }]);
   const [projectName, setProjectName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -197,8 +199,6 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
   }, [projectId]);
 
   useEffect(() => {
-    document.body.style.zoom = '80%';
-
     const checkAuth = () => {
       const isLoggedIn = sessionStorage.getItem('isLoggedIn');
       if (!isLoggedIn) {
@@ -231,7 +231,6 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      document.body.style.zoom = '100%';
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -266,7 +265,11 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
 
   const handleSave = async () => {
     localStorage.setItem('levelingRows', JSON.stringify(rows));
-    if (!projectId) { alert('Data saved locally!'); return; }
+    if (!projectId) {
+      setToast({ type: 'success', msg: 'Data saved locally!' });
+      setTimeout(() => setToast(null), 1500);
+      return;
+    }
     setSaving(true);
     try {
       await fetch(`/api/projects/${projectId}/rows`, { method: 'DELETE' });
@@ -286,8 +289,18 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
           }),
         });
       }
-      alert('Data saved successfully!');
-    } catch { alert('Save failed. Data kept locally.'); }
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progress: 25 }),
+      });
+      sessionStorage.setItem('activeProjectProgress', '25');
+      setToast({ type: 'success', msg: 'Data saved successfully!' });
+      setTimeout(() => setToast(null), 1500);
+    } catch {
+      setToast({ type: 'error', msg: 'Save failed. Data kept locally.' });
+      setTimeout(() => setToast(null), 3000);
+    }
     finally { setSaving(false); }
   };
 
@@ -306,6 +319,26 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
 
   return (
     <div className="di-page">
+      {toast && (
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            {toast.type === 'success' ? (
+              <div className="ep-notif-checkmark">
+                <svg viewBox="0 0 52 52">
+                  <circle className="ep-notif-circle" cx="26" cy="26" r="25" fill="none" />
+                  <path className="ep-notif-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+              </div>
+            ) : (
+              <div className="ep-notif-error-icon">❌</div>
+            )}
+            <h2 className={`ep-notif-title--${toast.type}`}>
+              {toast.type === 'success' ? 'Saved!' : 'Failed!'}
+            </h2>
+            <p className="ep-notif-message">{toast.msg}</p>
+          </div>
+        </div>
+      )}
       <Sidebar activePath="/data-input" onLogout={() => setShowLogoutModal(true)} />
 
       {/* Main */}

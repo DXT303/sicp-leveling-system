@@ -21,10 +21,7 @@ const LoginPage: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    document.body.style.zoom = '80%';
-    return () => {
-      document.body.style.zoom = '100%';
-    };
+    return () => {};
   }, []);
 
   const validate = (): boolean => {

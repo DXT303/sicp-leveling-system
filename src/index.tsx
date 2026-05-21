@@ -27,9 +27,9 @@ root.render(
     ) : path === "/data-input" ? (
       <DataInputPage projectId={projectId} />
     ) : path === "/computation" ? (
-      <ComputationPage />
+      <ComputationPage projectId={projectId} />
     ) : path === "/calibration" ? (
-      <CalibrationPage />
+      <CalibrationPage projectId={projectId} />
     ) : path === "/reports" ? (
       <ReportsPage />
     ) : (
