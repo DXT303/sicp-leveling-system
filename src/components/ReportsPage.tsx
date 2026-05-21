@@ -54,6 +54,8 @@ const ReportsPage: React.FC = () => {
   });
 
   useEffect(() => {
+    document.body.style.zoom = '80%';
+
     const checkAuth = () => {
       const isLoggedIn = sessionStorage.getItem('isLoggedIn');
       if (!isLoggedIn) {
@@ -86,6 +88,7 @@ const ReportsPage: React.FC = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
+      document.body.style.zoom = '100%';
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
