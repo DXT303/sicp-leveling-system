@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import bcrypt from 'bcryptjs';
 import db from './src/db/client.js';
 import { initSchema } from './src/db/schema.js';
 
@@ -17,13 +18,39 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// ── Login ──
-app.post('/api/auth/login', loginLimiter, (req, res) => {
-  const { passcode } = req.body;
-  if (passcode === process.env.PASSCODE) {
+// ── Register ──
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password)
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  try {
+    const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
+    if (existing.rows.length > 0)
+      return res.status(409).json({ success: false, message: 'Email already registered.' });
+    const hashed = await bcrypt.hash(password, 10);
+    await db.execute({ sql: 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)', args: [name, email, hashed] });
     res.json({ success: true });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid passcode' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Registration failed.' });
+  }
+});
+
+// ── Login ──
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).json({ success: false, message: 'Email and password are required.' });
+  try {
+    const result = await db.execute({ sql: 'SELECT * FROM users WHERE email = ?', args: [email] });
+    if (result.rows.length === 0)
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    const user = result.rows[0];
+    const match = await bcrypt.compare(password, user.password);
+    if (!match)
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    res.json({ success: true, name: user.name });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Login failed.' });
   }
 });
 

@@ -1,72 +1,67 @@
-import React, { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
 
+interface LoginForm {
+  email: string;
+  password: string;
+}
+
+interface LoginErrors {
+  email?: string;
+  password?: string;
+}
+
 const LoginPage: React.FC = () => {
-  const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
-  const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [showSuccess, setShowSuccess] = useState<boolean>(false);
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const [formData, setFormData] = useState<LoginForm>({ email: '', password: '' });
+  const [errors, setErrors] = useState<LoginErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    document.body.style.zoom = '90%';
-    return () => {
-      document.body.style.zoom = '100%';
-    };
-  }, []);
-
-  const handleChange = (i: number, e: ChangeEvent<HTMLInputElement>): void => {
-    const val = e.target.value.replace(/\D/, '');
-    if (!val) return;
-    const updated = [...digits];
-    updated[i] = val[val.length - 1];
-    setDigits(updated);
-    setError('');
-    if (i < 5) inputs.current[i + 1]?.focus();
-  };
-
-  const handleKeyDown = (i: number, e: KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Backspace') {
-      const updated = [...digits];
-      if (digits[i]) {
-        updated[i] = '';
-        setDigits(updated);
-      } else if (i > 0) {
-        inputs.current[i - 1]?.focus();
-      }
+  const validate = (): boolean => {
+    const newErrors: LoginErrors = {};
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
     }
+    if (!formData.password) newErrors.password = 'Password is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    const passcode = digits.join('');
-    if (passcode.length < 6) {
-      setError('Please enter all 6 digits.');
-      setShowModal(true);
-      return;
-    }
+    if (!validate()) return;
     setIsLoading(true);
-    
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Validate passcode (replace '123456' with your actual passcode)
-      const VALID_PASSCODE = import.meta.env.VITE_PASSCODE;
-      
-      if (passcode === VALID_PASSCODE) {
-        setShowSuccess(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
         sessionStorage.setItem('isLoggedIn', 'true');
-        setTimeout(() => {
-          window.location.replace('/dashboard');
-        }, 1500);
+        setShowSuccess(true);
+        setTimeout(() => window.location.replace('/dashboard'), 1500);
       } else {
-        setError('Invalid passcode. Please try again.');
-        setShowModal(true);
-        setDigits(Array(6).fill(''));
-        inputs.current[0]?.focus();
+        setErrorMsg(data.message || 'Invalid email or password.');
+        setShowError(true);
       }
+    } catch {
+      setErrorMsg('Something went wrong. Please try again.');
+      setShowError(true);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -77,31 +72,43 @@ const LoginPage: React.FC = () => {
           <form className="auth-form-group" onSubmit={handleSubmit} noValidate>
 
             <h1 className="auth-title">Welcome back!</h1>
-            <p className="auth-subtitle">Enter your passcode to access the system.</p>
+            <p className="auth-subtitle">Sign in to access the system.</p>
 
-            <div className="otp-group">
-              {digits.map((d, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { inputs.current[i] = el; }}
-                  className="otp-input"
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={d}
-                  onChange={(e) => handleChange(i, e)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                />
-              ))}
+            <div className="auth-field">
+              <span className="auth-field-label" onMouseDown={(e) => e.preventDefault()}>Email address</span>
+              <input
+                className={`auth-field-input${errors.email ? ' input-error' : ''}`}
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && <span className="auth-error">{errors.email}</span>}
+            </div>
+
+            <div className="auth-field">
+              <span className="auth-field-label" onMouseDown={(e) => e.preventDefault()}>Password</span>
+              <input
+                className={`auth-field-input${errors.password ? ' input-error' : ''}`}
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              {errors.password && <span className="auth-error">{errors.password}</span>}
             </div>
 
             <div className="auth-btn-wrapper">
               <button className="auth-btn" type="submit" disabled={isLoading}>
-                <span className="auth-btn-text">{isLoading ? 'Verifying...' : 'Login'}</span>
+                <span className="auth-btn-text">{isLoading ? 'Signing in...' : 'Sign In'}</span>
               </button>
             </div>
 
-            <p className="auth-contact">Need access? <span>Contact Administrator</span></p>
+            <p className="auth-contact">
+              No account? <span onClick={() => window.location.href = '/signup'}>Sign Up</span>
+            </p>
 
           </form>
         </div>
@@ -111,26 +118,24 @@ const LoginPage: React.FC = () => {
       </div>
       <p className="auth-copyright">© 2026 Survey Leveling System V1.1</p>
 
-      {/* Error Modal */}
-      {showModal && (
-        <div className="error-modal-overlay" onClick={() => setShowModal(false)}>
+      {showError && (
+        <div className="error-modal-overlay" onClick={() => setShowError(false)}>
           <div className="error-modal" onClick={(e) => e.stopPropagation()}>
             <div className="error-modal-icon">❌</div>
             <h2 className="error-modal-title">Oops!</h2>
-            <p className="error-modal-message">{error}</p>
-            <button className="error-modal-btn" onClick={() => setShowModal(false)}>Try Again</button>
+            <p className="error-modal-message">{errorMsg}</p>
+            <button className="error-modal-btn" onClick={() => setShowError(false)}>Try Again</button>
           </div>
         </div>
       )}
 
-      {/* Success Modal */}
       {showSuccess && (
         <div className="success-modal-overlay">
           <div className="success-modal">
             <div className="success-checkmark">
               <svg viewBox="0 0 52 52">
-                <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
               </svg>
             </div>
             <h2 className="success-modal-title">Access Granted!</h2>

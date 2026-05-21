@@ -28,6 +28,8 @@ const SignUpPage: React.FC = () => {
 
   const [errors, setErrors] = useState<SignUpFormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const validate = (): boolean => {
     const newErrors: SignUpFormErrors = {};
@@ -65,13 +67,18 @@ const SignUpPage: React.FC = () => {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }),
       });
-      if (!response.ok) throw new Error('Sign up failed');
       const data = await response.json();
-      console.log('Sign up success:', data);
+      if (response.ok && data.success) {
+        setShowSuccess(true);
+        setTimeout(() => window.location.replace('/'), 1500);
+      } else {
+        setShowError(true);
+        setErrors({ email: data.message || 'Registration failed.' });
+      }
     } catch (error) {
-      console.error('Sign up error:', error);
+      setShowError(true);
       setErrors({ email: 'Something went wrong. Please try again.' });
     } finally {
       setIsLoading(false);
@@ -178,10 +185,35 @@ const SignUpPage: React.FC = () => {
           </form>
         </div>
 
-        {/* Right: Background Image */}
         <div className="auth-bg-image" />
 
       </div>
+
+      {showError && (
+        <div className="error-modal-overlay" onClick={() => setShowError(false)}>
+          <div className="error-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="error-modal-icon">❌</div>
+            <h2 className="error-modal-title">Oops!</h2>
+            <p className="error-modal-message">{errors.email || 'Registration failed.'}</p>
+            <button className="error-modal-btn" onClick={() => setShowError(false)}>Try Again</button>
+          </div>
+        </div>
+      )}
+
+      {showSuccess && (
+        <div className="success-modal-overlay">
+          <div className="success-modal">
+            <div className="success-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+            </div>
+            <h2 className="success-modal-title">Account Created!</h2>
+            <p className="success-modal-message">Redirecting to login...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

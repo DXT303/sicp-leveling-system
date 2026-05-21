@@ -1,7 +1,17 @@
 import db from './client.js';
+import bcrypt from 'bcryptjs';
 
 export async function initSchema() {
   await db.batch([
+    // Users
+    `CREATE TABLE IF NOT EXISTS users (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT    NOT NULL,
+      email      TEXT    NOT NULL UNIQUE,
+      password   TEXT    NOT NULL,
+      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+    )`,
+
     // Projects
     `CREATE TABLE IF NOT EXISTS projects (
       id        INTEGER PRIMARY KEY AUTOINCREMENT,
