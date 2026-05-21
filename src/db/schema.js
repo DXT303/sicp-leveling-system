@@ -1,6 +1,6 @@
-import db from './client.js';
+import defaultDb from './client.js';
 
-export async function initSchema() {
+export async function initSchema(db = defaultDb) {
   await db.batch([
     {
       sql: `CREATE TABLE IF NOT EXISTS users (
