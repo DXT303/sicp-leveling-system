@@ -1,4 +1,4 @@
-import { getDb, toObjects, toObject } from './_db.js';
+import { getDb, toObjects, toObject } from '../_db.js';
 
 export default async function handler(req, res) {
   const db = await getDb();

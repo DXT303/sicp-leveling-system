@@ -1,5 +1,5 @@
 import { createClient } from '@libsql/client';
-import { initSchema } from '../src/db/schema.js';
+import { runMigrations } from '../src/db/migrate.js';
 
 let _db = null;
 
@@ -9,7 +9,7 @@ export async function getDb() {
     url: process.env.TURSO_DATABASE_URL ?? process.env.TURSO_URL,
     authToken: process.env.TURSO_AUTH_TOKEN,
   });
-  await initSchema(_db);
+  await runMigrations(_db);
   return _db;
 }
 

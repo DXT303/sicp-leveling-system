@@ -1,23 +1,5 @@
-import { createClient } from '@libsql/client';
 import bcrypt from 'bcryptjs';
-
-async function getDb() {
-  const db = createClient({
-    url: process.env.TURSO_DATABASE_URL ?? process.env.TURSO_URL,
-    authToken: process.env.TURSO_AUTH_TOKEN,
-  });
-  await db.execute({
-    sql: `CREATE TABLE IF NOT EXISTS users (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      name       TEXT    NOT NULL,
-      email      TEXT    NOT NULL UNIQUE,
-      password   TEXT    NOT NULL,
-      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
-    )`,
-    args: [],
-  });
-  return db;
-}
+import { getDb } from '../_db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST')
@@ -29,7 +11,6 @@ export default async function handler(req, res) {
 
   try {
     const db = await getDb();
-
     const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
     if (existing.rows.length > 0)
       return res.status(409).json({ success: false, message: 'Email already registered.' });
