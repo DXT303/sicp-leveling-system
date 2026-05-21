@@ -7,13 +7,12 @@ const ALL_MIGRATIONS = [m001, m002, m003, m004];
 
 export async function runMigrations(db) {
   // Ensure migrations tracking table exists
-  await db.execute({
-    sql: `CREATE TABLE IF NOT EXISTS _migrations (
+  await db.execute(
+    `CREATE TABLE IF NOT EXISTS _migrations (
       id         TEXT PRIMARY KEY,
       applied_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    args: [],
-  });
+    )`
+  );
 
   // Get already-applied migrations
   const result = await db.execute('SELECT id FROM _migrations');
@@ -25,7 +24,7 @@ export async function runMigrations(db) {
 
     console.log(`Running migration: ${migration.id}`);
     for (const sql of migration.up) {
-      await db.execute({ sql, args: [] }).catch(err => {
+      await db.execute(sql).catch(err => {
         // Ignore "already exists" / "duplicate column" errors
         if (!err.message?.includes('already exists') && !err.message?.includes('duplicate column')) {
           throw err;
