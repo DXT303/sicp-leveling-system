@@ -161,8 +161,8 @@ const DashboardPage: React.FC = () => {
             <div className="db-stat-icon">📋</div>
             <div>
               <p className="db-stat-label">Projects</p>
-              <p className="db-stat-value">3</p>
-              <p className="db-stat-sub green">3 active</p>
+              <p className="db-stat-value">{projects.length}</p>
+              <p className="db-stat-sub green">{projects.filter(p => p.status === 'active').length} active</p>
             </div>
           </div>
           <div className="db-divider" />
