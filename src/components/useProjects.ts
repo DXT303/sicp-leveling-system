@@ -44,5 +44,9 @@ export function useProjects() {
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
-  return { projects, addProject, deleteProject };
+  const updateProject = (id: number, data: Partial<Omit<Project, 'id' | 'createdAt'>>) => {
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  };
+
+  return { projects, addProject, deleteProject, updateProject };
 }

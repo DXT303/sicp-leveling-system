@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./ProjectList.css";
 import Sidebar from "./Sidebar";
-import { useProjects } from "./useProjects";
+import { useProjects, Project } from "./useProjects";
 import LogoutModal from "./LogoutModal";
 import NewProjectModal from "./NewProjectModal";
+import ProjectDetailModal from "./ProjectDetailModal";
+import EditProjectModal from "./EditProjectModal";
 
 const IconDashboard = () => (
   <svg
@@ -103,10 +105,14 @@ const statusColor: Record<string, string> = {
 };
 
 const ProjectListPage: React.FC = () => {
-  const { projects, addProject, deleteProject } = useProjects();
+  const { projects, addProject, deleteProject, updateProject } = useProjects();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [search, setSearch] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => sessionStorage.getItem("isLoggedIn") === "true",
@@ -145,6 +151,19 @@ const ProjectListPage: React.FC = () => {
     addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK });
   };
 
+  const handleEditSave = (data: Partial<Omit<Project, "id" | "createdAt">>) => {
+    if (selectedProject) updateProject(selectedProject.id, data);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteTargetId !== null) deleteProject(deleteTargetId);
+    setDeleteTargetId(null);
+    setTimeout(() => {
+      setShowDeleteSuccess(true);
+      setTimeout(() => setShowDeleteSuccess(false), 1500);
+    }, 0);
+  };
+
   if (!isAuthenticated) return null;
 
   const filtered = projects.filter((p) =>
@@ -153,7 +172,48 @@ const ProjectListPage: React.FC = () => {
 
   return (
     <div className="pl-page">
-      {showNewProjectModal && <NewProjectModal isOpen={showNewProjectModal} onClose={() => setShowNewProjectModal(false)} onSave={handleNewProjectSave} />}
+      {showNewProjectModal && <NewProjectModal isOpen={showNewProjectModal} onClose={() => setShowNewProjectModal(false)} onSave={handleNewProjectSave} existingNames={projects.map((p) => p.name)} />}
+      {deleteTargetId !== null && (
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            <div className="ep-notif-error-icon">🗑️</div>
+            <h2 className="ep-notif-title--error">Delete Project?</h2>
+            <p className="ep-notif-message">This action cannot be undone. Are you sure you want to delete this project?</p>
+            <div className="new-project-actions" style={{ justifyContent: "center", marginTop: 24 }}>
+              <button className="new-project-btn-cancel" onClick={() => setDeleteTargetId(null)}>Cancel</button>
+              <button className="new-project-btn-create" style={{ background: "#FF3B30", borderColor: "#FF3B30" }} onClick={handleConfirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDeleteSuccess && (
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            <div className="ep-notif-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle className="ep-notif-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="ep-notif-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+            </div>
+            <h2 className="ep-notif-title--success">Deleted!</h2>
+            <p className="ep-notif-message">Project has been deleted successfully.</p>
+          </div>
+        </div>
+      )}
+      {selectedProject && !showEditModal && (
+        <ProjectDetailModal
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
+          onEdit={() => setShowEditModal(true)}
+        />
+      )}
+      {selectedProject && showEditModal && (
+        <EditProjectModal
+          project={selectedProject}
+          onClose={() => { setShowEditModal(false); setSelectedProject(null); }}
+          onSave={handleEditSave}
+        />
+      )}
       <Sidebar
         activePath="/projects"
         onLogout={() => setShowLogoutModal(true)}
@@ -259,7 +319,7 @@ const ProjectListPage: React.FC = () => {
                   </thead>
                   <tbody>
                     {filtered.map((p, idx) => (
-                      <tr key={p.id}>
+                      <tr key={p.id} style={{ cursor: "pointer" }} onClick={() => { setSelectedProject(p); setShowEditModal(false); }}>
                         <td className="pl-num">{idx + 1}</td>
                         <td className="pl-name">{p.name}</td>
                         <td>{p.instrument}</td>
@@ -282,7 +342,7 @@ const ProjectListPage: React.FC = () => {
                         <td>
                           <button
                             className="pl-btn-delete"
-                            onClick={() => deleteProject(p.id)}
+                            onClick={(e) => { e.stopPropagation(); setDeleteTargetId(p.id); }}
                             title="Delete"
                           >
                             ×

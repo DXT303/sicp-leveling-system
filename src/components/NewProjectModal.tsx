@@ -5,9 +5,10 @@ interface NewProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: { projectName: string; instrument: string; bmElevation: string; method: string; distanceK: string }) => void;
+  existingNames: string[];
 }
 
-const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSave }) => {
+const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSave, existingNames }) => {
   const [formData, setFormData] = useState({
     projectName: '',
     instrument: 'Auto Level',
@@ -17,6 +18,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
   });
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,13 +35,48 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    setFormData({ projectName: '', instrument: 'Auto Level', bmElevation: '', method: 'Hi Method (Height of Instrument)', distanceK: '' });
-    onClose();
+    const isDuplicate = existingNames.some(
+      (n) => n.toLowerCase() === formData.projectName.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setToast({ type: 'error', msg: 'A project with this name already exists.' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    try {
+      onSave(formData);
+      setFormData({ projectName: '', instrument: 'Auto Level', bmElevation: '', method: 'Hi Method (Height of Instrument)', distanceK: '' });
+      setToast({ type: 'success', msg: 'Project created successfully!' });
+      setTimeout(onClose, 1500);
+    } catch {
+      setToast({ type: 'error', msg: 'Failed to create project. Please try again.' });
+      setTimeout(() => setToast(null), 3000);
+    }
   };
 
   return (
-    <div className="new-project-overlay" onClick={onClose}>
+    <>
+      {toast && (
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            {toast.type === 'success' ? (
+              <div className="ep-notif-checkmark">
+                <svg viewBox="0 0 52 52">
+                  <circle className="ep-notif-circle" cx="26" cy="26" r="25" fill="none" />
+                  <path className="ep-notif-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+              </div>
+            ) : (
+              <div className="ep-notif-error-icon">❌</div>
+            )}
+            <h2 className={`ep-notif-title--${toast.type}`}>
+              {toast.type === 'success' ? 'Success!' : 'Failed!'}
+            </h2>
+            <p className="ep-notif-message">{toast.msg}</p>
+          </div>
+        </div>
+      )}
+      <div className="new-project-overlay" onClick={toast ? undefined : onClose}>
       <div className="new-project-modal" onClick={(e) => e.stopPropagation()}>
         <div className="new-project-header">
           <h2>Create New Project</h2>
@@ -152,7 +189,8 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
