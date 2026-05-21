@@ -452,3 +452,43 @@ html, body, #root {
     white-space: nowrap;
   }
 }
+
+/* ── Checkbox ── */
+.auth-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.auth-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.auth-checkbox-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #000000;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 4px;
+}
+
+.auth-bottom-link {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000000;
+}
+
+.auth-bottom-link span {
+  color: #4F46E5;
+  cursor: pointer;
+}
+
+.auth-bottom-link span:hover {
+  text-decoration: underline;
+}

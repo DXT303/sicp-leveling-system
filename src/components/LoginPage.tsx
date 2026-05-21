@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
 import { postLog } from './useActivityLogs';
 
@@ -19,6 +19,13 @@ const LoginPage: React.FC = () => {
   const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    document.body.style.zoom = '80%';
+    return () => {
+      document.body.style.zoom = '100%';
+    };
+  }, []);
 
   const validate = (): boolean => {
     const newErrors: LoginErrors = {};
@@ -75,7 +82,7 @@ const LoginPage: React.FC = () => {
         <div className="auth-form-wrapper">
           <form className="auth-form-group" onSubmit={handleSubmit} noValidate>
 
-            <h1 className="auth-title">Welcome back</h1>
+            <h1 className="auth-title">Welcome back!</h1>
             <p className="auth-subtitle">Sign in to access the system.</p>
 
             <div className="auth-field">
