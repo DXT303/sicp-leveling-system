@@ -31,7 +31,7 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => (
       </div>
       <div className="new-project-field">
         <label>BM Elevation</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.bmElevation} m</p>
+        <p style={{ margin: 0, padding: "10px 0" }}>{project.bm_elevation} m</p>
       </div>
       <div className="new-project-field">
         <label>Method</label>
@@ -39,7 +39,7 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => (
       </div>
       <div className="new-project-field">
         <label>Distance K</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.distanceK} km</p>
+        <p style={{ margin: 0, padding: "10px 0" }}>{project.distance_k} km</p>
       </div>
       <div className="new-project-field">
         <label>Status</label>
@@ -52,7 +52,7 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => (
       </div>
       <div className="new-project-field">
         <label>Created</label>
-        <p style={{ margin: 0, padding: "10px 0" }}>{project.createdAt}</p>
+        <p style={{ margin: 0, padding: "10px 0" }}>{project.created_at}</p>
       </div>
 
       <div className="new-project-actions">

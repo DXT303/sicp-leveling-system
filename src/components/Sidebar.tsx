@@ -58,6 +58,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
   const [pinned, setPinned] = useState(true);
   const [hovered, setHovered] = useState(false);
   const expanded = pinned || hovered;
+  const userName = sessionStorage.getItem('userName') || 'User';
+  const avatarLetter = userName.charAt(0).toUpperCase();
 
   return (
     <aside
@@ -95,9 +97,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
       </div>
 
       <div className="sb-user">
-        <div className="sb-user-avatar">R</div>
+        <div className="sb-user-avatar">{avatarLetter}</div>
         <div className="sb-user-info">
-          <span className="sb-user-name">Ronald Talagtag</span>
+          <span className="sb-user-name">{userName}</span>
           <span className="sb-user-role">Engineer</span>
         </div>
       </div>

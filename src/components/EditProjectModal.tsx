@@ -5,16 +5,16 @@ import { Project } from "./useProjects";
 interface Props {
   project: Project;
   onClose: () => void;
-  onSave: (data: Partial<Omit<Project, "id" | "createdAt">>) => void;
+  onSave: (data: Partial<Omit<Project, "id" | "created_at">>) => void;
 }
 
 const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
   const [form, setForm] = useState({
     name: project.name,
     instrument: project.instrument,
-    bmElevation: project.bmElevation,
+    bm_elevation: project.bm_elevation,
     method: project.method,
-    distanceK: project.distanceK,
+    distance_k: project.distance_k,
     status: project.status,
   });
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -110,7 +110,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
           </div>
           <div className="new-project-field">
             <label>BM Elevation</label>
-            <input type="text" value={form.bmElevation} onChange={(e) => setForm({ ...form, bmElevation: e.target.value })} required />
+            <input type="text" value={form.bm_elevation} onChange={(e) => setForm({ ...form, bm_elevation: e.target.value })} required />
           </div>
           <div className="new-project-field">
             <label>Method</label>
@@ -118,7 +118,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
           </div>
           <div className="new-project-field">
             <label>Distance K</label>
-            <input type="text" value={form.distanceK} onChange={(e) => setForm({ ...form, distanceK: e.target.value })} required />
+            <input type="text" value={form.distance_k} onChange={(e) => setForm({ ...form, distance_k: e.target.value })} required />
           </div>
           <div className="new-project-field">
             <label>Status</label>

@@ -6,6 +6,7 @@ import LogoutModal from "./LogoutModal";
 import NewProjectModal from "./NewProjectModal";
 import ProjectDetailModal from "./ProjectDetailModal";
 import EditProjectModal from "./EditProjectModal";
+import { postLog } from "./useActivityLogs";
 
 const IconDashboard = () => (
   <svg
@@ -105,7 +106,7 @@ const statusColor: Record<string, string> = {
 };
 
 const ProjectListPage: React.FC = () => {
-  const { projects, addProject, deleteProject, updateProject } = useProjects();
+  const { projects, loading, addProject, deleteProject, updateProject } = useProjects();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
@@ -151,8 +152,21 @@ const ProjectListPage: React.FC = () => {
     addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK });
   };
 
-  const handleEditSave = (data: Partial<Omit<Project, "id" | "createdAt">>) => {
-    if (selectedProject) updateProject(selectedProject.id, data);
+  const handleEditSave = async (data: Partial<Omit<Project, "id" | "created_at">>) => {
+    if (!selectedProject) return;
+    const userName = sessionStorage.getItem('userName') || 'User';
+    const LABELS: Record<string, string> = {
+      name: 'Project Name', instrument: 'Instrument', bm_elevation: 'BM Elevation',
+      method: 'Method', distance_k: 'Distance K', status: 'Status', progress: 'Progress',
+    };
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
+    (Object.keys(data) as (keyof typeof data)[]).forEach((key) => {
+      if (data[key] !== (selectedProject as Record<string, unknown>)[key]) {
+        changes[LABELS[key] ?? key] = { from: (selectedProject as Record<string, unknown>)[key], to: data[key] };
+      }
+    });
+    await updateProject(selectedProject.id, data);
+    await postLog('info', `Project "${selectedProject.name}" updated by ${userName}`, 'Info / Project updated', Object.keys(changes).length ? changes : undefined);
   };
 
   const handleConfirmDelete = () => {
@@ -295,7 +309,34 @@ const ProjectListPage: React.FC = () => {
               </button>
             </div>
 
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="pl-table-wrapper">
+                <table className="pl-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Project Name</th>
+                      <th>Instrument</th>
+                      <th>Method</th>
+                      <th>BM Elev.</th>
+                      <th>Distance (km)</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        {Array.from({ length: 9 }).map((_, j) => (
+                          <td key={j}><div className="pl-skeleton" /></td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="pl-empty">
                 {search
                   ? "No projects match your search."
@@ -324,8 +365,8 @@ const ProjectListPage: React.FC = () => {
                         <td className="pl-name">{p.name}</td>
                         <td>{p.instrument}</td>
                         <td>{p.method}</td>
-                        <td>{p.bmElevation} m</td>
-                        <td>{p.distanceK} km</td>
+                        <td>{p.bm_elevation} m</td>
+                        <td>{p.distance_k} km</td>
                         <td>
                           <span
                             className="pl-status"
@@ -338,7 +379,7 @@ const ProjectListPage: React.FC = () => {
                               p.status.slice(1)}
                           </span>
                         </td>
-                        <td>{p.createdAt}</td>
+                        <td>{p.created_at}</td>
                         <td>
                           <button
                             className="pl-btn-delete"

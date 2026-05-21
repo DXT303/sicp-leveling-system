@@ -65,19 +65,27 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.post('/api/projects', async (req, res) => {
-  const { name, status = 'active', progress = 0 } = req.body;
+  const { name, instrument, bmElevation, method, distanceK, status = 'active', progress = 0 } = req.body;
   const result = await db.execute({
-    sql: 'INSERT INTO projects (name, status, progress) VALUES (?, ?, ?) RETURNING *',
-    args: [name, status, progress],
+    sql: 'INSERT INTO projects (name, instrument, bm_elevation, method, distance_k, status, progress) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *',
+    args: [name, instrument ?? null, bmElevation ?? null, method ?? null, distanceK ?? null, status, progress],
   });
   res.json(result.rows[0]);
 });
 
 app.patch('/api/projects/:id', async (req, res) => {
-  const { name, status, progress } = req.body;
+  const { name, instrument, bm_elevation, method, distance_k, status, progress } = req.body;
   await db.execute({
-    sql: 'UPDATE projects SET name = COALESCE(?, name), status = COALESCE(?, status), progress = COALESCE(?, progress) WHERE id = ?',
-    args: [name ?? null, status ?? null, progress ?? null, req.params.id],
+    sql: `UPDATE projects SET
+      name         = COALESCE(?, name),
+      instrument   = COALESCE(?, instrument),
+      bm_elevation = COALESCE(?, bm_elevation),
+      method       = COALESCE(?, method),
+      distance_k   = COALESCE(?, distance_k),
+      status       = COALESCE(?, status),
+      progress     = COALESCE(?, progress)
+    WHERE id = ?`,
+    args: [name ?? null, instrument ?? null, bm_elevation ?? null, method ?? null, distance_k ?? null, status ?? null, progress ?? null, req.params.id],
   });
   res.json({ success: true });
 });
@@ -134,10 +142,10 @@ app.get('/api/logs', async (req, res) => {
 });
 
 app.post('/api/logs', async (req, res) => {
-  const { type, message, sub } = req.body;
+  const { type, message, sub, details } = req.body;
   const result = await db.execute({
-    sql: 'INSERT INTO activity_logs (type, message, sub) VALUES (?, ?, ?) RETURNING *',
-    args: [type, message, sub ?? null],
+    sql: 'INSERT INTO activity_logs (type, message, sub, details) VALUES (?, ?, ?, ?) RETURNING *',
+    args: [type, message, sub ?? null, details ?? null],
   });
   res.json(result.rows[0]);
 });

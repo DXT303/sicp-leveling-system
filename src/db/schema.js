@@ -14,11 +14,15 @@ export async function initSchema() {
     },
     {
       sql: `CREATE TABLE IF NOT EXISTS projects (
-        id         INTEGER PRIMARY KEY AUTOINCREMENT,
-        name       TEXT    NOT NULL,
-        status     TEXT    NOT NULL DEFAULT 'active',
-        progress   INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        name         TEXT    NOT NULL,
+        instrument   TEXT,
+        bm_elevation TEXT,
+        method       TEXT,
+        distance_k   TEXT,
+        status       TEXT    NOT NULL DEFAULT 'active',
+        progress     INTEGER NOT NULL DEFAULT 0,
+        created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
       )`,
       args: [],
     },
@@ -66,6 +70,17 @@ export async function initSchema() {
       args: [],
     },
   ]);
+
+  // Migrate existing tables — ignore errors if columns already exist
+  for (const col of [
+    `ALTER TABLE projects ADD COLUMN instrument   TEXT`,
+    `ALTER TABLE projects ADD COLUMN bm_elevation TEXT`,
+    `ALTER TABLE projects ADD COLUMN method       TEXT`,
+    `ALTER TABLE projects ADD COLUMN distance_k   TEXT`,
+    `ALTER TABLE activity_logs ADD COLUMN details TEXT`,
+  ]) {
+    await db.execute({ sql: col, args: [] }).catch(() => {});
+  }
 
   console.log('✅ Database schema initialized');
 }

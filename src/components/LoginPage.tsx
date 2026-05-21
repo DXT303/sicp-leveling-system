@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
+import { postLog } from './useActivityLogs';
 
 interface LoginForm {
   email: string;
@@ -50,6 +51,9 @@ const LoginPage: React.FC = () => {
       const data = await res.json();
       if (res.ok && data.success) {
         sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('userName', data.name ?? '');
+        sessionStorage.setItem('userEmail', formData.email);
+        postLog('system', `${data.name ?? formData.email} logged in`, 'System / Login event');
         setShowSuccess(true);
         setTimeout(() => window.location.replace('/dashboard'), 1500);
       } else {

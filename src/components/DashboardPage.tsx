@@ -7,6 +7,9 @@ import CalibrateModal from './CalibrateModal';
 import ExportDataModal from './ExportDataModal';
 import LogoutModal from './LogoutModal';
 import { useProjects } from './useProjects';
+import { useActivityLogs, postLog, dotColor } from './useActivityLogs';
+import ActivityLogDetailModal from './ActivityLogDetailModal';
+import { ActivityLog } from './useActivityLogs';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -72,6 +75,10 @@ const DashboardPage: React.FC = () => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { projects, addProject, deleteProject } = useProjects();
+  const { logs, fetchLogs } = useActivityLogs();
+  const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
+  const userName = sessionStorage.getItem('userName') || 'User';
+  const firstName = userName.split(' ')[0];
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('isLoggedIn') === 'true';
   });
@@ -137,7 +144,7 @@ const DashboardPage: React.FC = () => {
 
           {/* Header */}
           <div className="db-header">
-            <h1 className="db-greeting">Hello, Ronald 👋🏼</h1>
+            <h1 className="db-greeting">Hello, {firstName} 👋🏼</h1>
             <div className="db-header-right">
               <div className="db-search">
                 <span className="db-search-icon">🔍</span>
@@ -242,10 +249,14 @@ const DashboardPage: React.FC = () => {
                     <div className="db-progress-bar">
                       <div className="db-progress-fill" style={{ width: `${p.progress}%`, background: '#FF8D28' }} />
                     </div>
-                    <p className="db-project-meta">Created: {p.createdAt} · {p.instrument} · k={p.distanceK}km</p>
+                    <p className="db-project-meta">Created: {p.created_at} · {p.instrument} · k={p.distance_k}km</p>
                   </div>
                   <button
-                    onClick={() => deleteProject(p.id)}
+                    onClick={async () => {
+                      await deleteProject(p.id);
+                      await postLog('warning', `Project "${p.name}" deleted by ${userName}`, 'Warning / Deleted');
+                      fetchLogs();
+                    }}
                     style={{ background: 'none', border: 'none', color: '#FF383C', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                   >×</button>
                 </div>
@@ -259,19 +270,22 @@ const DashboardPage: React.FC = () => {
               <h2 className="db-card-title" style={{ marginBottom: 0 }}>Activity logs</h2>
               <div className="db-logs-search">🔍 Search</div>
             </div>
-            {[
-              { dot: '#14AE5C', title: 'FR-6.1 — project saved, computation done', sub: 'Success / Completed' },
-              { dot: '#FF383C', title: 'FR-6.2 — closure error exceeded limit', sub: 'Error / Exceeded tolerance' },
-              { dot: '#FFCC00', title: 'FR-6.2 — calibration pending, flagged reading', sub: 'Warning / Pending' },
-            ].map((log) => (
-              <div className="db-log-item" key={log.title}>
-                <div className="db-log-dot" style={{ background: log.dot }} />
-                <div>
-                  <p className="db-log-title">{log.title}</p>
-                  <p className="db-log-sub">{log.sub}</p>
+            {logs.length === 0 ? (
+              <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No activity yet.</p>
+            ) : (
+              logs.slice(0, 6).map((log) => (
+                <div className="db-log-item" key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
+                  <div className="db-log-dot" style={{ background: dotColor(log.type) }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p className="db-log-title">{log.message}</p>
+                    <p className="db-log-sub">{log.sub ?? log.type}</p>
+                  </div>
+                  {log.details && (
+                    <span style={{ fontSize: 11, color: '#0088FF', flexShrink: 0, alignSelf: 'center' }}>View ›</span>
+                  )}
                 </div>
-              </div>
-            ))}
+              ))
+            )}
 
             {/* Legend */}
             <div className="db-legend">
@@ -294,10 +308,17 @@ const DashboardPage: React.FC = () => {
         </div>
       </main>
 
+      {selectedLog && (
+        <ActivityLogDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />
+      )}
       <NewProjectModal
         isOpen={showNewProjectModal}
         onClose={() => setShowNewProjectModal(false)}
-        onSave={(data) => addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK })}
+        onSave={async (data) => {
+          await addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK });
+          await postLog('success', `Project "${data.projectName}" created by ${userName}`, 'Success / Completed');
+          fetchLogs();
+        }}
         existingNames={projects.map((p) => p.name)}
       />
       <ImportDataModal 
