@@ -25,6 +25,7 @@
   "scripts": {
     "dev": "concurrently \"node --watch server.js\" \"vite\"",
     "build": "vite build",
+    "migrate": "node scripts/migrate.js",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
