@@ -63,13 +63,26 @@ const SignUpPage: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
-    
-    // Simulate registration
-    setTimeout(() => {
-      setShowSuccess(true);
-      setTimeout(() => window.location.replace('/'), 1500);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setShowSuccess(true);
+        setTimeout(() => window.location.replace('/'), 1500);
+      } else {
+        setErrors({ email: data.message || 'Registration failed.' });
+        setShowError(true);
+      }
+    } catch {
+      setErrors({ email: 'Something went wrong. Please try again.' });
+      setShowError(true);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -91,6 +104,7 @@ const SignUpPage: React.FC = () => {
                 type="text"
                 name="name"
                 placeholder="Enter your name"
+                autoComplete="name"
                 value={formData.name}
                 onChange={handleChange}
               />
@@ -106,6 +120,7 @@ const SignUpPage: React.FC = () => {
                 type="email"
                 name="email"
                 placeholder="Enter your email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
               />
@@ -121,6 +136,7 @@ const SignUpPage: React.FC = () => {
                 type="password"
                 name="password"
                 placeholder="Password"
+                autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
               />
@@ -136,6 +152,7 @@ const SignUpPage: React.FC = () => {
                 type="password"
                 name="retypePassword"
                 placeholder="Retype your password"
+                autoComplete="new-password"
                 value={formData.retypePassword}
                 onChange={handleChange}
               />

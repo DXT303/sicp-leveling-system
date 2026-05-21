@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
 
 interface LoginForm {
@@ -18,13 +18,6 @@ const LoginPage: React.FC = () => {
   const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-
-  useEffect(() => {
-    document.body.style.zoom = '90%';
-    return () => {
-      document.body.style.zoom = '100%';
-    };
-  }, []);
 
   const validate = (): boolean => {
     const newErrors: LoginErrors = {};
@@ -48,24 +41,27 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
-    
-    // Simulate API delay
-    setTimeout(() => {
-      // Check against environment variable or default credentials
-      const validEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com';
-      const validPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
-      
-      if (formData.email === validEmail && formData.password === validPassword) {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
         sessionStorage.setItem('isLoggedIn', 'true');
-        sessionStorage.setItem('userName', 'Admin User');
         setShowSuccess(true);
         setTimeout(() => window.location.replace('/dashboard'), 1500);
       } else {
-        setErrorMsg('Invalid email or password.');
+        setErrorMsg(data.message || 'Invalid email or password.');
         setShowError(true);
       }
+    } catch {
+      setErrorMsg('Something went wrong. Please try again.');
+      setShowError(true);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -85,6 +81,7 @@ const LoginPage: React.FC = () => {
                 type="email"
                 name="email"
                 placeholder="Enter your email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
               />
@@ -98,6 +95,7 @@ const LoginPage: React.FC = () => {
                 type="password"
                 name="password"
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
               />
