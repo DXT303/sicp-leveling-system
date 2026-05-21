@@ -23,15 +23,30 @@ A software-based approach for error detection and correction in surveying instru
 ## Installation
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Run development server
+# 2. Set up environment variables
+cp .env.example .env
+# Then edit .env and fill in your Turso database credentials
+
+# 3. Run development server
 npm run dev
 
-# Build for production
+# 4. Build for production
 npm run build
 ```
+
+## Environment Variables
+
+Create a `.env` file from `.env.example` and fill in:
+
+| Variable | Description |
+|---|---|
+| `TURSO_URL` | Your Turso database URL (e.g. `libsql://your-db.turso.io`) |
+| `TURSO_AUTH_TOKEN` | Your Turso auth token from the Turso dashboard |
+
+Get your credentials at [https://turso.tech](https://turso.tech) → your database → **Generate Token**.
 
 ## Project Structure
 

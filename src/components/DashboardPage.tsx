@@ -298,6 +298,7 @@ const DashboardPage: React.FC = () => {
         isOpen={showNewProjectModal}
         onClose={() => setShowNewProjectModal(false)}
         onSave={(data) => addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK })}
+        existingNames={projects.map((p) => p.name)}
       />
       <ImportDataModal 
         isOpen={showImportDataModal} 
