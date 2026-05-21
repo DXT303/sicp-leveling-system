@@ -1,7 +1,7 @@
-import { createClient } from '@libsql/client';
-import bcrypt from 'bcryptjs';
+const { createClient } = require('@libsql/client');
+const bcrypt = require('bcryptjs');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
@@ -44,4 +44,4 @@ export default async function handler(req, res) {
     console.error('Login error:', error);
     return res.status(500).json({ success: false, message: 'Server error' });
   }
-}
+};
