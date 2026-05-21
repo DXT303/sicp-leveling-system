@@ -58,6 +58,14 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => (
       <div className="new-project-actions">
         <button type="button" className="new-project-btn-cancel" onClick={onClose}>Close</button>
         <button type="button" className="new-project-btn-create" onClick={onEdit}>Edit</button>
+        <button
+          type="button"
+          className="new-project-btn-create"
+          style={{ background: '#2563EB', borderColor: '#2563EB' }}
+          onClick={() => window.location.href = `/data-input?projectId=${project.id}`}
+        >
+          Open Data Input
+        </button>
       </div>
     </div>
   </div>

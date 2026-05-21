@@ -49,11 +49,11 @@ const IconReports = () => (
 interface LevelingRow {
   id: number;
   station: string;
-  bs: string;
-  fs: string;
-  tbm: string;
-  elev: string;
-  hi: string;
+  bs: string;    // Back Sight — user input
+  fs: string;    // Fore Sight — user input (at TP/BM only)
+  ifs: string;   // Intermediate Fore Sight — user input (IS points)
+  hi: string;    // Height of Instrument — auto-calculated
+  elev: string;  // Elevation / RL — auto-calculated (except BM1)
 }
 
 const CustomDropdown: React.FC<{
@@ -94,12 +94,73 @@ const CustomDropdown: React.FC<{
   );
 };
 
-const DataInputPage: React.FC = () => {
-  const [rows, setRows] = useState<LevelingRow[]>([
-    { id: 1, station: 'BM1', bs: '', fs: '', tbm: '', elev: '', hi: '' }
-  ]);
+// ── helpers ──
+function apiRowToLevelingRow(r: Record<string, unknown>, idx: number): LevelingRow {
+  return {
+    id: idx + 1,
+    station: String(r.station ?? ''),
+    bs:   r.bs     != null ? String(r.bs)     : '',
+    fs:   r.fs     != null ? String(r.fs)     : '',
+    ifs:  r.is_val != null ? String(r.is_val) : '',
+    hi:   r.hi     != null ? String(r.hi)     : '',
+    elev: r.rl     != null ? String(r.rl)     : '',
+  };
+}
+
+// Auto-calculate HI and ELEV for all rows given current state
+function computeRows(rows: LevelingRow[]): LevelingRow[] {
+  const result = [...rows];
+  let currentHI = 0;
+
+  for (let i = 0; i < result.length; i++) {
+    const row = { ...result[i] };
+    const bs = parseFloat(row.bs);
+    const fs = parseFloat(row.fs);
+    const ifs = parseFloat(row.ifs);
+    const elev = parseFloat(row.elev);
+
+    if (i === 0) {
+      // BM1: user enters ELEV manually; HI = ELEV + BS
+      if (!isNaN(elev) && !isNaN(bs)) {
+        currentHI = elev + bs;
+        row.hi = currentHI.toFixed(3);
+      } else {
+        row.hi = '';
+        currentHI = 0;
+      }
+    } else {
+      // For all other rows, ELEV is auto-calculated
+      if (!isNaN(fs) && row.fs !== '') {
+        // Turning Point or BM2: ELEV = HI - FS
+        row.elev = currentHI > 0 ? (currentHI - fs).toFixed(3) : '';
+        // If this row also has a BS, it's a TP — update HI
+        if (!isNaN(bs) && row.bs !== '') {
+          const newElev = parseFloat(row.elev);
+          currentHI = newElev + bs;
+          row.hi = currentHI.toFixed(3);
+        } else {
+          row.hi = '';
+        }
+      } else if (!isNaN(ifs) && row.ifs !== '') {
+        // Intermediate sight: ELEV = HI - IFS
+        row.elev = currentHI > 0 ? (currentHI - ifs).toFixed(3) : '';
+        row.hi = '';
+      } else {
+        row.elev = '';
+        row.hi = '';
+      }
+    }
+
+    result[i] = row;
+  }
+  return result;
+}
+
+const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) => {
+  const [rows, setRows] = useState<LevelingRow[]>([{ id: Date.now(), station: 'BM1', bs: '', fs: '', ifs: '', hi: '', elev: '' }]);
+  const [projectName, setProjectName] = useState('');
+  const [saving, setSaving] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [selectedProject, setSelectedProject] = useState('Survey A — Sector 4');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -111,6 +172,29 @@ const DataInputPage: React.FC = () => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Load project name + rows from API when projectId is present
+  useEffect(() => {
+    if (!projectId) {
+      const saved = localStorage.getItem('levelingRows');
+      if (saved) setRows(JSON.parse(saved));
+      return;
+    }
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then((list: Record<string, unknown>[]) => {
+        const p = list.find(x => x.id === projectId);
+        if (p) setProjectName(String(p.name));
+      })
+      .catch(console.error);
+    fetch(`/api/projects/${projectId}/rows`)
+      .then(r => r.json())
+      .then((data: Record<string, unknown>[]) => {
+        if (data.length > 0)
+          setRows(computeRows(data.map((r, i) => apiRowToLevelingRow(r, i))));
+      })
+      .catch(console.error);
+  }, [projectId]);
 
   useEffect(() => {
     document.body.style.zoom = '80%';
@@ -166,27 +250,59 @@ const DataInputPage: React.FC = () => {
   }
 
   const addRow = () => {
-    const newRow: LevelingRow = {
-      id: rows.length + 1,
-      station: '',
-      bs: '',
-      fs: '',
-      tbm: '',
-      elev: '',
-      hi: ''
-    };
-    setRows([...rows, newRow]);
+    const newRow: LevelingRow = { id: Date.now(), station: '', bs: '', fs: '', ifs: '', hi: '', elev: '' };
+    setRows(prev => computeRows([...prev, newRow]));
   };
 
   const updateRow = (id: number, field: keyof LevelingRow, value: string) => {
-    setRows(rows.map(row => row.id === id ? { ...row, [field]: value } : row));
+    setRows(prev => computeRows(prev.map(row => row.id === id ? { ...row, [field]: value } : row)));
   };
 
   const deleteRow = (id: number) => {
     if (rows.length > 1) {
-      setRows(rows.filter(row => row.id !== id));
+      setRows(prev => computeRows(prev.filter(row => row.id !== id)));
     }
   };
+
+  const handleSave = async () => {
+    localStorage.setItem('levelingRows', JSON.stringify(rows));
+    if (!projectId) { alert('Data saved locally!'); return; }
+    setSaving(true);
+    try {
+      await fetch(`/api/projects/${projectId}/rows`, { method: 'DELETE' });
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        await fetch(`/api/projects/${projectId}/rows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            station:   r.station,
+            bs:        r.bs   !== '' ? parseFloat(r.bs)   : null,
+            is_val:    r.ifs  !== '' ? parseFloat(r.ifs)  : null,
+            fs:        r.fs   !== '' ? parseFloat(r.fs)   : null,
+            hi:        r.hi   !== '' ? parseFloat(r.hi)   : null,
+            rl:        r.elev !== '' ? parseFloat(r.elev) : null,
+            row_order: i,
+          }),
+        });
+      }
+      alert('Data saved successfully!');
+    } catch { alert('Save failed. Data kept locally.'); }
+    finally { setSaving(false); }
+  };
+
+  const handleClear = () => {
+    const blank = [{ id: Date.now(), station: 'BM1', bs: '', fs: '', ifs: '', hi: '', elev: '' }];
+    setRows(blank);
+    localStorage.removeItem('levelingRows');
+  };
+
+  // Totals for footer
+  const totalBS = rows.reduce((s, r) => s + (parseFloat(r.bs) || 0), 0);
+  const totalFS = rows.reduce((s, r) => s + (parseFloat(r.fs) || 0), 0);
+  const firstElev = parseFloat(rows[0]?.elev) || 0;
+  const lastElev = parseFloat(rows[rows.length - 1]?.elev) || 0;
+  const closureOk = rows.length > 1 && Math.abs((totalBS - totalFS) - (lastElev - firstElev)) < 0.001;
 
   return (
     <div className="di-page">
@@ -197,17 +313,12 @@ const DataInputPage: React.FC = () => {
         <div className="di-content">
           {/* Header */}
           <div className="di-header">
-            <h1 className="di-title">Data Input</h1>
+            <div>
+              <h1 className="di-title">Data Input</h1>
+              {projectName && <p className="di-project-label">Project: <strong>{projectName}</strong></p>}
+            </div>
             <div className="di-header-actions">
-              <CustomDropdown
-                value={selectedProject}
-                onChange={setSelectedProject}
-                options={[
-                  'Survey A — Sector 4',
-                  'Calibration Unit 7',
-                  'Two-Peg Test — Unit 3',
-                ]}
-              />
+              <button className="di-btn-back" onClick={() => window.location.href = '/projects'}>← Projects</button>
               <div className="di-settings-wrapper">
                 <div className="di-settings-icon" onClick={() => setShowLogoutModal(true)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -234,27 +345,25 @@ const DataInputPage: React.FC = () => {
                     <div className="di-row-card" key={row.id}>
                       <div className="di-row-card-header">
                         <span className="di-row-card-num">Row {idx + 1}</span>
-                        <button
-                          className="di-btn-delete"
-                          onClick={() => deleteRow(row.id)}
-                          disabled={rows.length === 1}
-                        >×</button>
+                        <button className="di-btn-delete" onClick={() => deleteRow(row.id)} disabled={rows.length === 1}>×</button>
                       </div>
                       {([
-                        { label: 'Station', field: 'station', placeholder: 'e.g. BM1' },
-                        { label: 'BS', field: 'bs', placeholder: '0.000' },
-                        { label: 'FS', field: 'fs', placeholder: '0.000' },
-                        { label: 'TBM', field: 'tbm', placeholder: '0.000' },
-                        { label: 'Elevation', field: 'elev', placeholder: '0.000' },
-                        { label: 'HI', field: 'hi', placeholder: '0.000' },
-                      ] as const).map(({ label, field, placeholder }) => (
+                        { label: 'STA', field: 'station' as const, placeholder: 'e.g. BM1', auto: false },
+                        { label: 'BS', field: 'bs' as const, placeholder: '0.000', auto: false },
+                        { label: 'FS', field: 'fs' as const, placeholder: '0.000', auto: false },
+                        { label: 'IFS', field: 'ifs' as const, placeholder: '0.000', auto: false },
+                        { label: 'HI', field: 'hi' as const, placeholder: 'auto', auto: true },
+                        { label: 'ELEV', field: 'elev' as const, placeholder: idx === 0 ? '0.000' : 'auto', auto: idx !== 0 },
+                      ]).map(({ label, field, placeholder, auto }) => (
                         <div className="di-row-card-field" key={field}>
                           <span className="di-row-card-label">{label}</span>
                           <input
                             type="text"
                             value={row[field]}
-                            onChange={(e) => updateRow(row.id, field, e.target.value)}
+                            onChange={(e) => !auto && updateRow(row.id, field, e.target.value)}
                             placeholder={placeholder}
+                            disabled={auto}
+                            className={auto ? 'di-auto-field' : ''}
                           />
                         </div>
                       ))}
@@ -265,35 +374,53 @@ const DataInputPage: React.FC = () => {
                 <table className="di-table">
                   <thead>
                     <tr>
-                      <th>Station</th>
-                      <th>BS</th>
-                      <th>FS</th>
-                      <th>TBM</th>
-                      <th>Elevation</th>
-                      <th>HI</th>
+                      <th>STA</th>
+                      <th>BS (m)</th>
+                      <th>HI (m)</th>
+                      <th>FS (m)</th>
+                      <th>IFS (m)</th>
+                      <th>ELEV (m)</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map(row => (
+                    {rows.map((row, idx) => (
                       <tr key={row.id}>
                         <td><input type="text" value={row.station} onChange={(e) => updateRow(row.id, 'station', e.target.value)} placeholder="e.g. BM1" /></td>
                         <td><input type="text" value={row.bs} onChange={(e) => updateRow(row.id, 'bs', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.hi} placeholder="auto" disabled className="di-auto-field" /></td>
                         <td><input type="text" value={row.fs} onChange={(e) => updateRow(row.id, 'fs', e.target.value)} placeholder="0.000" /></td>
-                        <td><input type="text" value={row.tbm} onChange={(e) => updateRow(row.id, 'tbm', e.target.value)} placeholder="0.000" /></td>
-                        <td><input type="text" value={row.elev} onChange={(e) => updateRow(row.id, 'elev', e.target.value)} placeholder="0.000" /></td>
-                        <td><input type="text" value={row.hi} onChange={(e) => updateRow(row.id, 'hi', e.target.value)} placeholder="0.000" /></td>
+                        <td><input type="text" value={row.ifs} onChange={(e) => updateRow(row.id, 'ifs', e.target.value)} placeholder="0.000" /></td>
+                        <td>
+                          {idx === 0
+                            ? <input type="text" value={row.elev} onChange={(e) => updateRow(row.id, 'elev', e.target.value)} placeholder="0.000" />
+                            : <input type="text" value={row.elev} placeholder="auto" disabled className="di-auto-field" />
+                          }
+                        </td>
                         <td><button className="di-btn-delete" onClick={() => deleteRow(row.id)} disabled={rows.length === 1}>×</button></td>
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr className="di-totals-row">
+                      <td><strong>TOTALS</strong></td>
+                      <td><strong>{totalBS.toFixed(3)}</strong></td>
+                      <td>—</td>
+                      <td><strong>{totalFS.toFixed(3)}</strong></td>
+                      <td>—</td>
+                      <td className={closureOk ? 'di-closure-ok' : 'di-closure-fail'}>
+                        <strong>{closureOk ? '✓ Closed' : rows.length > 1 ? '✗ Open' : '—'}</strong>
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
               )}
             </div>
 
             <div className="di-table-footer">
-              <button className="di-btn-clear">Clear All</button>
-              <button className="di-btn-save">Save Data</button>
+              <button className="di-btn-clear" onClick={handleClear}>Clear All</button>
+              <button className="di-btn-save" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Data'}</button>
             </div>
           </div>
         </div>

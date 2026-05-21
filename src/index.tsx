@@ -10,6 +10,8 @@ import ReportsPage from "./components/ReportsPage";
 import ProjectListPage from "./components/ProjectListPage";
 
 const path = window.location.pathname;
+const params = new URLSearchParams(window.location.search);
+const projectId = params.get('projectId') ? Number(params.get('projectId')) : null;
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
@@ -23,7 +25,7 @@ root.render(
     ) : path === "/projects" ? (
       <ProjectListPage />
     ) : path === "/data-input" ? (
-      <DataInputPage />
+      <DataInputPage projectId={projectId} />
     ) : path === "/computation" ? (
       <ComputationPage />
     ) : path === "/calibration" ? (
