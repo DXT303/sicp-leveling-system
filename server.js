@@ -8,6 +8,18 @@ import { initSchema } from './src/db/schema.js';
 const app = express();
 app.use(express.json());
 
+// Convert Turso array rows to objects using column names
+function toObjects(result) {
+  const cols = result.columns ?? [];
+  return result.rows.map(row =>
+    cols.length > 0 ? Object.fromEntries(cols.map((c, i) => [c, row[i]])) : row
+  );
+}
+
+function toObject(result) {
+  return toObjects(result)[0] ?? null;
+}
+
 // ── Rate Limiting ──
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -60,39 +72,51 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
 // ── Projects ──
 app.get('/api/projects', async (req, res) => {
-  const result = await db.execute('SELECT * FROM projects ORDER BY created_at DESC');
-  res.json(result.rows);
+  try {
+    const result = await db.execute('SELECT * FROM projects ORDER BY created_at DESC');
+    res.json(toObjects(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.post('/api/projects', async (req, res) => {
-  const { name, instrument, bmElevation, method, distanceK, status = 'active', progress = 0 } = req.body;
-  const result = await db.execute({
-    sql: 'INSERT INTO projects (name, instrument, bm_elevation, method, distance_k, status, progress) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *',
-    args: [name, instrument ?? null, bmElevation ?? null, method ?? null, distanceK ?? null, status, progress],
-  });
-  res.json(result.rows[0]);
+  try {
+    const { name, status = 'active', progress = 0 } = req.body;
+    const instrument   = req.body.instrument   ?? null;
+    const bm_elevation = req.body.bm_elevation ?? req.body.bmElevation ?? null;
+    const method       = req.body.method       ?? null;
+    const distance_k   = req.body.distance_k   ?? req.body.distanceK   ?? null;
+    const result = await db.execute({
+      sql: 'INSERT INTO projects (name, instrument, bm_elevation, method, distance_k, status, progress) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *',
+      args: [name, instrument, bm_elevation, method, distance_k, status, progress],
+    });
+    res.json(toObject(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.patch('/api/projects/:id', async (req, res) => {
-  const { name, instrument, bm_elevation, method, distance_k, status, progress } = req.body;
-  await db.execute({
-    sql: `UPDATE projects SET
-      name         = COALESCE(?, name),
-      instrument   = COALESCE(?, instrument),
-      bm_elevation = COALESCE(?, bm_elevation),
-      method       = COALESCE(?, method),
-      distance_k   = COALESCE(?, distance_k),
-      status       = COALESCE(?, status),
-      progress     = COALESCE(?, progress)
-    WHERE id = ?`,
-    args: [name ?? null, instrument ?? null, bm_elevation ?? null, method ?? null, distance_k ?? null, status ?? null, progress ?? null, req.params.id],
-  });
-  res.json({ success: true });
+  try {
+    const { name, instrument, bm_elevation, method, distance_k, status, progress } = req.body;
+    await db.execute({
+      sql: `UPDATE projects SET
+        name         = COALESCE(?, name),
+        instrument   = COALESCE(?, instrument),
+        bm_elevation = COALESCE(?, bm_elevation),
+        method       = COALESCE(?, method),
+        distance_k   = COALESCE(?, distance_k),
+        status       = COALESCE(?, status),
+        progress     = COALESCE(?, progress)
+      WHERE id = ?`,
+      args: [name ?? null, instrument ?? null, bm_elevation ?? null, method ?? null, distance_k ?? null, status ?? null, progress ?? null, req.params.id],
+    });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.delete('/api/projects/:id', async (req, res) => {
-  await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [req.params.id] });
-  res.json({ success: true });
+  try {
+    await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [req.params.id] });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // ── Leveling Rows ──
@@ -101,7 +125,7 @@ app.get('/api/projects/:id/rows', async (req, res) => {
     sql: 'SELECT * FROM leveling_rows WHERE project_id = ? ORDER BY row_order',
     args: [req.params.id],
   });
-  res.json(result.rows);
+  res.json(toObjects(result));
 });
 
 app.post('/api/projects/:id/rows', async (req, res) => {
@@ -111,7 +135,7 @@ app.post('/api/projects/:id/rows', async (req, res) => {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
     args: [req.params.id, station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order ?? 0],
   });
-  res.json(result.rows[0]);
+  res.json(toObject(result));
 });
 
 app.delete('/api/projects/:id/rows', async (req, res) => {
@@ -122,7 +146,7 @@ app.delete('/api/projects/:id/rows', async (req, res) => {
 // ── Calibrations ──
 app.get('/api/calibrations', async (req, res) => {
   const result = await db.execute('SELECT * FROM calibrations ORDER BY created_at DESC');
-  res.json(result.rows);
+  res.json(toObjects(result));
 });
 
 app.post('/api/calibrations', async (req, res) => {
@@ -132,22 +156,26 @@ app.post('/api/calibrations', async (req, res) => {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
     args: [project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status],
   });
-  res.json(result.rows[0]);
+  res.json(toObject(result));
 });
 
 // ── Activity Logs ──
 app.get('/api/logs', async (req, res) => {
-  const result = await db.execute('SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 50');
-  res.json(result.rows);
+  try {
+    const result = await db.execute('SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 50');
+    res.json(toObjects(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 app.post('/api/logs', async (req, res) => {
-  const { type, message, sub, details } = req.body;
-  const result = await db.execute({
-    sql: 'INSERT INTO activity_logs (type, message, sub, details) VALUES (?, ?, ?, ?) RETURNING *',
-    args: [type, message, sub ?? null, details ?? null],
-  });
-  res.json(result.rows[0]);
+  try {
+    const { type, message, sub, details } = req.body;
+    const result = await db.execute({
+      sql: 'INSERT INTO activity_logs (type, message, sub, details) VALUES (?, ?, ?, ?) RETURNING *',
+      args: [type, message, sub ?? null, details ?? null],
+    });
+    res.json(toObject(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // ── Start (local) / Export (Vercel) ──
