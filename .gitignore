@@ -27,3 +27,5 @@ yarn-error.log*
 *.swo
 *~
 node_modules
+.vercel
+.env*.local
