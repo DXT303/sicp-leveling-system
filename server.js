@@ -18,12 +18,6 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// ── Debug (temp) ──
-app.get('/api/debug/users', async (req, res) => {
-  const result = await db.execute('SELECT id, name, email FROM users');
-  res.json(result.rows);
-});
-
 // ── Register ──
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body;
@@ -48,23 +42,19 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ success: false, message: 'Email and password are required.' });
   try {
     const result = await db.execute({ sql: 'SELECT id, name, email, password FROM users WHERE email = ?', args: [email] });
-    console.log('Login query result:', JSON.stringify(result.rows));
     if (result.rows.length === 0)
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     const row = result.rows[0];
-    // Turso may return rows as objects or arrays — handle both
     const cols = result.columns ?? [];
     const user = cols.length > 0
       ? Object.fromEntries(cols.map((c, i) => [c, row[i]]))
       : row;
-    console.log('Parsed user:', JSON.stringify(user));
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     res.json({ success: true, name: user.name });
   } catch (err) {
-    console.error('Login error:', err.message);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: 'Login failed.' });
   }
 });
 
