@@ -49,27 +49,23 @@ const LoginPage: React.FC = () => {
     if (!validate()) return;
     setIsLoading(true);
     
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
+    // Simulate API delay
+    setTimeout(() => {
+      // Check against environment variable or default credentials
+      const validEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com';
+      const validPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+      
+      if (formData.email === validEmail && formData.password === validPassword) {
         sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('userName', 'Admin User');
         setShowSuccess(true);
         setTimeout(() => window.location.replace('/dashboard'), 1500);
       } else {
-        setErrorMsg(data.message || 'Invalid email or password.');
+        setErrorMsg('Invalid email or password.');
         setShowError(true);
       }
-    } catch {
-      setErrorMsg('Something went wrong. Please try again.');
-      setShowError(true);
-    } finally {
       setIsLoading(false);
-    }
+    }, 800);
   };
 
   return (
