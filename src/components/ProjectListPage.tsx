@@ -160,9 +160,10 @@ const ProjectListPage: React.FC = () => {
       method: 'Method', distance_k: 'Distance K', status: 'Status', progress: 'Progress',
     };
     const changes: Record<string, { from: unknown; to: unknown }> = {};
+    const before = selectedProject as unknown as Record<string, unknown>;
     (Object.keys(data) as (keyof typeof data)[]).forEach((key) => {
-      if (data[key] !== (selectedProject as Record<string, unknown>)[key]) {
-        changes[LABELS[key] ?? key] = { from: (selectedProject as Record<string, unknown>)[key], to: data[key] };
+      if (data[key] !== before[key]) {
+        changes[LABELS[key] ?? key] = { from: before[key], to: data[key] };
       }
     });
     await updateProject(selectedProject.id, data);
