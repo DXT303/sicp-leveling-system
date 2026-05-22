@@ -88,6 +88,30 @@ const DashboardPage: React.FC = () => {
     return sessionStorage.getItem('isLoggedIn') === 'true';
   });
 
+  // Get greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'Good morning';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
+    }
+  };
+
+  // Get icon based on time
+  const getGreetingIcon = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return '☀️'; // Morning - Sun
+    } else if (hour >= 12 && hour < 18) {
+      return '🌤️'; // Afternoon - Sun behind cloud
+    } else {
+      return '🌙'; // Evening - Moon
+    }
+  };
+
   useEffect(() => {
     const checkAuth = () => {
       const isLoggedIn = sessionStorage.getItem('isLoggedIn');
@@ -158,7 +182,7 @@ const DashboardPage: React.FC = () => {
 
           {/* Header */}
           <div className="db-header">
-            <h1 className="db-greeting">Hello, {firstName} 👋🏼</h1>
+            <h1 className="db-greeting">{getGreeting()}, {firstName} {getGreetingIcon()}</h1>
             <div className="db-header-right">
               <div className="db-search">
                 <span className="db-search-icon">🔍</span>
