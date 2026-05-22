@@ -236,40 +236,42 @@ const DashboardPage: React.FC = () => {
 
           {/* Active Projects */}
           <div className="db-projects-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexShrink: 0 }}>
               <h2 className="db-card-title" style={{ marginBottom: 0 }}>Active Projects</h2>
               <span
                 onClick={() => window.location.href = '/projects'}
                 style={{ fontSize: '13px', color: '#FF8D28', cursor: 'pointer', fontWeight: 500 }}
               >View all ›</span>
             </div>
-            {projects.length === 0 ? (
-              <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No projects yet. Click "New Project" to get started.</p>
-            ) : (
-              projects.slice(0, 3).map((p) => (
-                <div className="db-project-item" key={p.id}>
-                  <div className="db-project-dot" style={{ background: p.status === 'completed' ? '#34C759' : p.status === 'pending' ? '#FFCC00' : '#FF8D28' }} />
-                  <div className="db-project-info">
-                    <div className="db-project-header">
-                      <span className="db-project-name">{p.name}</span>
-                      <span className="db-project-pct">{p.progress}%</span>
+            <div className="db-projects-container">
+              {projects.length === 0 ? (
+                <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No projects yet. Click "New Project" to get started.</p>
+              ) : (
+                projects.slice(0, 10).map((p) => (
+                  <div className="db-project-item" key={p.id}>
+                    <div className="db-project-dot" style={{ background: p.status === 'completed' ? '#34C759' : p.status === 'pending' ? '#FFCC00' : '#FF8D28' }} />
+                    <div className="db-project-info">
+                      <div className="db-project-header">
+                        <span className="db-project-name">{p.name}</span>
+                        <span className="db-project-pct">{p.progress}%</span>
+                      </div>
+                      <div className="db-progress-bar">
+                        <div className="db-progress-fill" style={{ width: `${p.progress}%`, background: '#FF8D28' }} />
+                      </div>
+                      <p className="db-project-meta">Created: {p.created_at} · {p.instrument} · k={p.distance_k}km</p>
                     </div>
-                    <div className="db-progress-bar">
-                      <div className="db-progress-fill" style={{ width: `${p.progress}%`, background: '#FF8D28' }} />
-                    </div>
-                    <p className="db-project-meta">Created: {p.created_at} · {p.instrument} · k={p.distance_k}km</p>
+                    <button
+                      onClick={async () => {
+                        await deleteProject(p.id);
+                        await postLog('warning', `Project "${p.name}" deleted by ${userName}`, 'Warning / Deleted');
+                        fetchLogs();
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#FF383C', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
+                    >×</button>
                   </div>
-                  <button
-                    onClick={async () => {
-                      await deleteProject(p.id);
-                      await postLog('warning', `Project "${p.name}" deleted by ${userName}`, 'Warning / Deleted');
-                      fetchLogs();
-                    }}
-                    style={{ background: 'none', border: 'none', color: '#FF383C', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
-                  >×</button>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
 
           {/* Activity Logs */}
