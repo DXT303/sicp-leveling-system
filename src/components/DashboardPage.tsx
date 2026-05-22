@@ -6,6 +6,7 @@ import ImportDataModal from './ImportDataModal';
 import CalibrateModal from './CalibrateModal';
 import ExportDataModal from './ExportDataModal';
 import LogoutModal from './LogoutModal';
+import DeleteProjectModal from './DeleteProjectModal';
 import { useProjects } from './useProjects';
 import { useActivityLogs, postLog, dotColor } from './useActivityLogs';
 import ActivityLogDetailModal from './ActivityLogDetailModal';
@@ -74,6 +75,8 @@ const DashboardPage: React.FC = () => {
   const [showExportDataModal, setShowExportDataModal] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<{ id: number; name: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [logsSearchQuery, setLogsSearchQuery] = useState('');
   const { projects, addProject, deleteProject } = useProjects();
@@ -122,6 +125,15 @@ const DashboardPage: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) return;
+    await deleteProject(projectToDelete.id);
+    await postLog('warning', `Project "${projectToDelete.name}" deleted by ${userName}`, 'Warning / Deleted');
+    fetchLogs();
+    setShowDeleteModal(false);
+    setProjectToDelete(null);
+  };
 
   const handleLogout = () => {
     setShowLogoutModal(false);
@@ -261,10 +273,9 @@ const DashboardPage: React.FC = () => {
                       <p className="db-project-meta">Created: {p.created_at} · {p.instrument} · k={p.distance_k}km</p>
                     </div>
                     <button
-                      onClick={async () => {
-                        await deleteProject(p.id);
-                        await postLog('warning', `Project "${p.name}" deleted by ${userName}`, 'Warning / Deleted');
-                        fetchLogs();
+                      onClick={() => {
+                        setProjectToDelete({ id: p.id, name: p.name });
+                        setShowDeleteModal(true);
                       }}
                       style={{ background: 'none', border: 'none', color: '#FF383C', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                     >×</button>
@@ -364,6 +375,15 @@ const DashboardPage: React.FC = () => {
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleLogout}
+      />
+      <DeleteProjectModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setProjectToDelete(null);
+        }}
+        onConfirm={handleDeleteProject}
+        projectName={projectToDelete?.name || ''}
       />
     </div>
   );
