@@ -40,7 +40,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
     try {
       onSave(form);
       showToast("success", "Project updated successfully!");
-      setTimeout(onClose, 1500);
+      setTimeout(onClose, 3000);
     } catch {
       showToast("error", "Failed to update project. Please try again.");
     }

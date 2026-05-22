@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Project } from './useProjects';
 import DataInputModal from './DataInputModal';
 import ComputationModal from './ComputationModal';
@@ -26,6 +26,12 @@ const STEPS = [
 const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
   const [progress, setProgress] = useState(project.progress ?? 0);
   const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [displayProgress, setDisplayProgress] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDisplayProgress(progress), 80);
+    return () => clearTimeout(t);
+  }, [progress]);
 
   const currentStep = STEPS.findIndex(s => s.pct > progress);
   const activeIdx   = currentStep === -1 ? STEPS.length - 1 : currentStep;
@@ -78,7 +84,7 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
               <span className="pdm-progress-pct">{progress}%</span>
             </div>
             <div className="pdm-progress-track">
-              <div className="pdm-progress-fill" style={{ width: `${progress}%` }} />
+              <div className="pdm-progress-fill pdm-progress-fill--animated" style={{ width: `${displayProgress}%` }} />
             </div>
           </div>
 
@@ -88,7 +94,7 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
               const done   = progress >= step.pct;
               const active = idx === activeIdx;
               return (
-                <div key={step.label} className={`pdm-step ${done ? 'pdm-step-done' : ''} ${active ? 'pdm-step-active' : ''}`}>
+                <div key={step.label} className={`pdm-step ${done ? 'pdm-step-done' : active ? 'pdm-step-active' : ''}`}>
                   <div className="pdm-step-circle">{done ? '✓' : idx + 1}</div>
                   <div className="pdm-step-body">
                     <span className="pdm-step-label">{step.label}</span>

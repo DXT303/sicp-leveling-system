@@ -58,6 +58,7 @@ interface Props {
 const DataInputModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
   const [rows, setRows] = useState<LevelingRow[]>([{ id: Date.now(), station: 'BM1', bs: '', fs: '', ifs: '', hi: '', elev: '' }]);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   useEffect(() => {
@@ -66,7 +67,8 @@ const DataInputModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
       .then((data: Record<string, unknown>[]) => {
         if (data.length > 0) setRows(computeRows(data.map((r, i) => apiRowToLevelingRow(r, i))));
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [projectId]);
 
   const addRow = () => setRows(prev => computeRows([...prev, { id: Date.now(), station: '', bs: '', fs: '', ifs: '', hi: '', elev: '' }]));
@@ -140,7 +142,13 @@ const DataInputModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
           <button className="new-project-close" onClick={onClose}>×</button>
         </div>
         <div className="wf-modal-body">
-          <div className="di-table-card" style={{ boxShadow: 'none', padding: 0 }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', gap: 16 }}>
+              <div style={{ width: 40, height: 40, border: '4px solid #F0F0F0', borderTop: '4px solid #FF8D28', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ fontSize: 14, color: '#9197B3', fontFamily: 'Poppins' }}>Loading data...</span>
+            </div>
+          ) : (
+            <div className="di-table-card" style={{ boxShadow: 'none', padding: 0 }}>
             <div className="di-table-header">
               <h2>Leveling Observations</h2>
               <button className="di-btn-add" onClick={addRow}>+ Add Row</button>
@@ -189,7 +197,8 @@ const DataInputModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
               <button className="di-btn-clear" onClick={() => setRows([{ id: Date.now(), station: 'BM1', bs: '', fs: '', ifs: '', hi: '', elev: '' }])}>Clear All</button>
               <button className="di-btn-save" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Data'}</button>
             </div>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

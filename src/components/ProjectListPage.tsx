@@ -168,6 +168,7 @@ const ProjectListPage: React.FC = () => {
     });
     await updateProject(selectedProject.id, data);
     await postLog('info', `Project "${selectedProject.name}" updated by ${userName}`, 'Info / Project updated', Object.keys(changes).length ? changes : undefined);
+    setSelectedProject(prev => prev ? { ...prev, ...data } : prev);
   };
 
   const handleConfirmDelete = () => {
@@ -225,7 +226,7 @@ const ProjectListPage: React.FC = () => {
       {selectedProject && showEditModal && (
         <EditProjectModal
           project={selectedProject}
-          onClose={() => { setShowEditModal(false); setSelectedProject(null); }}
+          onClose={() => setShowEditModal(false)}
           onSave={handleEditSave}
         />
       )}

@@ -3,6 +3,9 @@ import './Reports.css';
 import './NewProjectModal.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
+import ProjectDetailModal from './ProjectDetailModal';
+import EditProjectModal from './EditProjectModal';
+import { Project as FullProject } from './useProjects';
 
 interface CalibrationRecord {
   id: number;
@@ -18,12 +21,7 @@ interface CalibrationRecord {
   created_at: string;
 }
 
-interface Project {
-  id: number;
-  name: string;
-  progress: number;
-  status: string;
-}
+type Project = FullProject;
 
 const ReportsPage: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -31,6 +29,8 @@ const ReportsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState<'All' | 'Leveling' | 'Calibration'>('All');
   const [toast, setToast] = useState<string | null>(null);
+  const [detailProject, setDetailProject] = useState<Project | null>(null);
+  const [editProject, setEditProject] = useState<Project | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(() =>
     sessionStorage.getItem('isLoggedIn') === 'true'
   );
@@ -257,7 +257,10 @@ const ReportsPage: React.FC = () => {
                               <button
                                 className="rep-action-btn"
                                 title="Open project"
-                                onClick={() => window.location.href = `/data-input?projectId=${row.projectId}`}
+                                onClick={() => {
+                                  const p = projects.find(x => x.id === row.projectId);
+                                  if (p) setDetailProject(p);
+                                }}
                               >👁️</button>
                             )}
                             {row.type === 'Leveling' && row.projectId && row.status !== 'Completed' && (
@@ -286,6 +289,28 @@ const ReportsPage: React.FC = () => {
         </div>
       </main>
 
+      {detailProject && (
+        <ProjectDetailModal
+          project={detailProject}
+          onClose={() => setDetailProject(null)}
+          onEdit={() => setEditProject(detailProject)}
+        />
+      )}
+      {editProject && (
+        <EditProjectModal
+          project={editProject}
+          onClose={() => setEditProject(null)}
+          onSave={async (data) => {
+            await fetch(`/api/projects/${editProject.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            fetchData();
+            setEditProject(null);
+          }}
+        />
+      )}
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

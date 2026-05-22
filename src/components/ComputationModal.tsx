@@ -14,6 +14,7 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
   const [method, setMethod] = useState('rise-fall');
   const [computedRows, setComputedRows] = useState<ComputedRow[]>([]);
   const [confirmed, setConfirmed] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [methodOpen, setMethodOpen] = useState(false);
   const [toast, setToast] = useState(false);
 
@@ -33,7 +34,8 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
         }
         setComputedRows(mapped);
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [projectId]);
 
   const sampleData: ComputedRow[] = computedRows.length > 0 ? computedRows : [
@@ -107,6 +109,13 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
           </div>
         </div>
         <div className="wf-modal-body">
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', gap: 16 }}>
+              <div style={{ width: 40, height: 40, border: '4px solid #F0F0F0', borderTop: '4px solid #FF8D28', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ fontSize: 14, color: '#9197B3', fontFamily: 'Poppins' }}>Loading data...</span>
+            </div>
+          ) : (
+          <>
           <div className="comp-table-card">
             <div className="comp-table-wrapper">
               <table className="comp-table">
@@ -161,6 +170,8 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
               {confirmed ? '✓ Confirmed!' : 'Confirm Computation →'}
             </button>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>
