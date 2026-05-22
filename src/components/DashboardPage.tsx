@@ -74,6 +74,7 @@ const DashboardPage: React.FC = () => {
   const [showExportDataModal, setShowExportDataModal] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { projects, addProject, deleteProject } = useProjects();
   const { logs, fetchLogs } = useActivityLogs();
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -148,7 +149,13 @@ const DashboardPage: React.FC = () => {
             <div className="db-header-right">
               <div className="db-search">
                 <span className="db-search-icon">🔍</span>
-                <span className="db-search-placeholder">Search</span>
+                <input 
+                  type="text" 
+                  placeholder="Search" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="db-search-input"
+                />
               </div>
               <div className="db-settings-wrapper">
                 <div className="db-settings-icon" onClick={() => setShowLogoutModal(true)}>
