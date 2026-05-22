@@ -75,6 +75,7 @@ const DashboardPage: React.FC = () => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [logsSearchQuery, setLogsSearchQuery] = useState('');
   const { projects, addProject, deleteProject } = useProjects();
   const { logs, fetchLogs } = useActivityLogs();
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -275,13 +276,28 @@ const DashboardPage: React.FC = () => {
           <div className="db-logs-card">
             <div className="db-logs-header">
               <h2 className="db-card-title" style={{ marginBottom: 0 }}>Activity logs</h2>
-              <div className="db-logs-search">🔍 Search</div>
+              <div className="db-logs-search">
+                <span>🔍</span>
+                <input 
+                  type="text" 
+                  placeholder="Search" 
+                  value={logsSearchQuery}
+                  onChange={(e) => setLogsSearchQuery(e.target.value)}
+                  className="db-logs-search-input"
+                />
+              </div>
             </div>
             <div className="db-logs-container">
               {logs.length === 0 ? (
                 <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No activity yet.</p>
               ) : (
-                logs.slice(0, 6).map((log) => (
+                logs
+                  .filter(log => 
+                    log.message.toLowerCase().includes(logsSearchQuery.toLowerCase()) ||
+                    (log.sub && log.sub.toLowerCase().includes(logsSearchQuery.toLowerCase()))
+                  )
+                  .slice(0, 6)
+                  .map((log) => (
                   <div className="db-log-item" key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
                     <div className="db-log-dot" style={{ background: dotColor(log.type) }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
