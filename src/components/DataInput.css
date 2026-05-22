@@ -6,6 +6,8 @@
   overflow: hidden;
   background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
   font-family: 'Poppins', sans-serif;
+  cursor: default;
+  user-select: none;
 }
 
 /* ── Sidebar ── */
@@ -602,6 +604,8 @@
   outline: none;
   transition: border-color 0.2s;
   min-width: 0;
+  cursor: text;
+  user-select: text;
 }
 
 .di-table input:focus {

@@ -14,6 +14,8 @@ body {
   height: 100vh;
   overflow: hidden;
   background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
+  cursor: default;
+  user-select: none;
 }
 
 /* ========== SIDEBAR ========== */
