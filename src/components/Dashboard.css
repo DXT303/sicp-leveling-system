@@ -763,9 +763,9 @@ body, html, #root {
 
 /* ── Legend ── */
 .db-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px 12px;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid rgba(40, 40, 40, 0.1);
@@ -775,6 +775,12 @@ body, html, #root {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
+}
+
+.db-legend-item:nth-child(5) {
+  grid-column: 2 / 4;
+  justify-content: center;
 }
 
 .db-legend-dot {

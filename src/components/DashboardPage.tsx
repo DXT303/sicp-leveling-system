@@ -315,11 +315,11 @@ const DashboardPage: React.FC = () => {
             {/* Legend */}
             <div className="db-legend">
               {[
-                { color: '#34C759', label: 'Success / Completed' },
+                { color: '#34C759', label: 'Completed' },
                 { color: '#FF383C', label: 'Error / Exceeded' },
                 { color: '#FFCC00', label: 'Warning / Pending' },
-                { color: '#8E8E93', label: 'System / Login event' },
-                { color: '#0088FF', label: 'Info / Data imported' },
+                { color: '#8E8E93', label: 'Login event' },
+                { color: '#0088FF', label: 'Data imported' },
               ].map((l) => (
                 <div className="db-legend-item" key={l.label}>
                   <div className="db-legend-dot" style={{ background: l.color }} />
