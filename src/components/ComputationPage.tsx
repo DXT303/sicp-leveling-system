@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Computation.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
+import { updateProjectProgress } from './useProjectProgress';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -181,12 +182,8 @@ const ComputationPage: React.FC<{ projectId?: number | null }> = ({ projectId })
 
   const handleConfirm = async () => {
     if (!projectId) return;
-    await fetch(`/api/projects/${projectId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ progress: 50 }),
-    });
-    sessionStorage.setItem('activeProjectProgress', '50');
+    // Auto-update progress based on milestones
+    await updateProjectProgress(projectId);
     setConfirmed(true);
     setTimeout(() => window.location.href = `/calibration?projectId=${projectId}`, 1200);
   };

@@ -184,9 +184,9 @@ const DashboardPage: React.FC = () => {
           <div className="db-stat">
             <div className="db-stat-icon">⚙️</div>
             <div>
-              <p className="db-stat-label">Status</p>
-              <p className="db-stat-value">80%</p>
-              <p className="db-stat-sub green">Completed</p>
+              <p className="db-stat-label">Avg Progress</p>
+              <p className="db-stat-value">{projects.length > 0 ? Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length) : 0}%</p>
+              <p className="db-stat-sub green">Overall</p>
             </div>
           </div>
           <div className="db-divider" />

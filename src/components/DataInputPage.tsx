@@ -3,6 +3,7 @@ import './DataInput.css';
 import './NewProjectModal.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
+import { updateProjectProgress } from './useProjectProgress';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -289,12 +290,8 @@ const DataInputPage: React.FC<{ projectId?: number | null }> = ({ projectId }) =
           }),
         });
       }
-      await fetch(`/api/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ progress: 25 }),
-      });
-      sessionStorage.setItem('activeProjectProgress', '25');
+      // Auto-update progress based on milestones
+      await updateProjectProgress(projectId);
       setToast({ type: 'success', msg: 'Data saved successfully!' });
       setTimeout(() => setToast(null), 1500);
     } catch {
