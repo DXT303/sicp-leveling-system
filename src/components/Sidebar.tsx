@@ -21,6 +21,11 @@ const IconReports = () => (
     <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
   </svg>
 );
+const IconPin = ({ pinned }: { pinned: boolean }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: pinned ? 'rotate(0deg)' : 'rotate(45deg)', transition: 'transform 0.2s' }}>
+    <path d="M16 9V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v5L4 14v2h6v6l2 2 2-2v-6h6v-2l-4-5z" fill={pinned ? 'currentColor' : 'none'}/>
+  </svg>
+);
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: <IconDashboard />, path: '/dashboard' },
@@ -41,7 +46,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
   const [pinned, setPinned] = useState(() => localStorage.getItem('sb_pinned') === 'true');
-  const [hovered, setHovered] = useState(false);
+  const [hovered, setHovered] = useState(() => sessionStorage.getItem('sb_was_expanded') === 'true');
   const expanded = pinned || hovered;
   const userName = sessionStorage.getItem('userName') || 'User';
   const avatarLetter = userName.charAt(0).toUpperCase();
@@ -50,6 +55,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
     document.title = PAGE_TITLES[activePath] ?? 'Survey Leveling';
   }, [activePath]);
 
+  useEffect(() => {
+    // Clear the flag after component mounts
+    const timer = setTimeout(() => {
+      sessionStorage.removeItem('sb_was_expanded');
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const togglePin = () => {
     setPinned(p => {
       localStorage.setItem('sb_pinned', String(!p));
@@ -57,17 +70,34 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
     });
   };
 
+  const handleMouseEnter = () => {
+    setHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+  };
+
+  const handleNavClick = (path: string, isActive: boolean) => {
+    if (!isActive) {
+      if (hovered || pinned) {
+        sessionStorage.setItem('sb_was_expanded', 'true');
+      }
+      window.location.href = path;
+    }
+  };
+
   return (
     <aside
       className={`sb-sidebar ${expanded ? 'expanded' : ''}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div>
         <div className="sb-header">
           <span className="sb-title">LOGO</span>
           <button className="sb-toggle" onClick={togglePin} title={pinned ? 'Unpin sidebar' : 'Pin sidebar open'}>
-            {pinned ? '«' : '»'}
+            <IconPin pinned={pinned} />
           </button>
         </div>
         <nav className="sb-nav">
@@ -78,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
                 key={item.label}
                 className={`sb-nav-item ${isActive ? 'sb-nav-active' : ''}`}
                 title={item.label}
-                onClick={() => { if (!isActive) window.location.href = item.path; }}
+                onClick={() => handleNavClick(item.path, isActive)}
               >
                 <span className="sb-nav-icon">{item.icon}</span>
                 <span className="sb-nav-label">{item.label}</span>

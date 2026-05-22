@@ -425,7 +425,7 @@ body, html, #root {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%);
+  background: transparent;
   padding: 32px 0 20px;
   margin: 0;
 }
@@ -679,7 +679,8 @@ body, html, #root {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #F2F2F7;
+  background: transparent;
+  border: none;
   border-radius: 10px;
   padding: 5px 12px;
   font-size: 12px;
