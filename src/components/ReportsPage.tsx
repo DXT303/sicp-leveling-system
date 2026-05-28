@@ -3,6 +3,7 @@ import './Reports.css';
 import './NewProjectModal.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
+import MarkCompleteModal from './MarkCompleteModal';
 import ProjectDetailModal from './ProjectDetailModal';
 import EditProjectModal from './EditProjectModal';
 import { Project as FullProject } from './useProjects';
@@ -25,6 +26,8 @@ type Project = FullProject;
 
 const ReportsPage: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showMarkCompleteModal, setShowMarkCompleteModal] = useState(false);
+  const [projectToComplete, setProjectToComplete] = useState<{ id: number; name: string } | null>(null);
   const [calibrations, setCalibrations] = useState<CalibrationRecord[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState<'All' | 'Leveling' | 'Calibration'>('All');
@@ -87,12 +90,15 @@ const ReportsPage: React.FC = () => {
     setCalibrations(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleMarkComplete = async (projectId: number) => {
-    await fetch(`/api/projects/${projectId}`, {
+  const handleMarkComplete = async () => {
+    if (!projectToComplete) return;
+    await fetch(`/api/projects/${projectToComplete.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ progress: 100, status: 'completed' }),
     });
+    setShowMarkCompleteModal(false);
+    setProjectToComplete(null);
     setToast('Project marked as completed!');
     setTimeout(() => setToast(null), 1500);
     fetchData();
@@ -267,7 +273,10 @@ const ReportsPage: React.FC = () => {
                               <button
                                 className="rep-action-btn"
                                 title="Mark as complete"
-                                onClick={() => handleMarkComplete(row.projectId!)}
+                                onClick={() => {
+                                  setProjectToComplete({ id: row.projectId!, name: row.name });
+                                  setShowMarkCompleteModal(true);
+                                }}
                               >✅</button>
                             )}
                             {row.type === 'Calibration' && row.calibrationId && (
@@ -311,6 +320,15 @@ const ReportsPage: React.FC = () => {
           }}
         />
       )}
+      <MarkCompleteModal
+        isOpen={showMarkCompleteModal}
+        projectName={projectToComplete?.name || ''}
+        onClose={() => {
+          setShowMarkCompleteModal(false);
+          setProjectToComplete(null);
+        }}
+        onConfirm={handleMarkComplete}
+      />
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
