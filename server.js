@@ -161,6 +161,39 @@ app.delete('/api/projects/:id/rows', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// ── Bulk Import Observations ──
+app.post('/api/observations/bulk', async (req, res) => {
+  try {
+    const { project_id, observations } = req.body;
+    if (!project_id || !observations || !Array.isArray(observations)) {
+      return res.status(400).json({ success: false, message: 'Invalid request' });
+    }
+    
+    // Insert all observations
+    for (let i = 0; i < observations.length; i++) {
+      const obs = observations[i];
+      await db.execute({
+        sql: `INSERT INTO leveling_rows (project_id, station, bs, is_val, fs, hi, rise, fall, rl, row_order)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          project_id,
+          obs.station ?? null,
+          obs.bs ?? null,
+          obs.is ?? null,
+          obs.fs ?? null,
+          obs.hi ?? null,
+          obs.rise ?? null,
+          obs.fall ?? null,
+          obs.rl ?? null,
+          i,
+        ],
+      });
+    }
+    
+    res.json({ success: true, count: observations.length });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 // ── Calibrations ──
 app.get('/api/calibrations', async (req, res) => {
   try {
