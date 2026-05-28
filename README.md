@@ -247,8 +247,6 @@ cms-login/
 
 ## License
 
-© 2025 Survey Leveling System V1.2
+© 2026 Survey Leveling System V1.2
 
-## Author
 
-Ronald Talagtag - Engineer
