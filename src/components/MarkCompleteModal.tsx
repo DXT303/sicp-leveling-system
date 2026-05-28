@@ -19,7 +19,7 @@ const MarkCompleteModal: React.FC<MarkCompleteModalProps> = ({ isOpen, projectNa
         <p className="logout-modal-message">Are you sure you want to mark "{projectName}" as completed?</p>
         <div className="logout-modal-actions">
           <button className="logout-modal-btn cancel" onClick={onClose}>Cancel</button>
-          <button className="logout-modal-btn confirm" onClick={onConfirm}>Mark Complete</button>
+          <button className="logout-modal-btn confirm" onClick={onConfirm}>Complete</button>
         </div>
       </div>
     </div>

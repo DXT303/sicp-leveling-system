@@ -254,6 +254,16 @@ const DashboardPage: React.FC = () => {
               { label: 'Import Data', icon: '⬇️', onClick: () => setShowImportDataModal(true) },
               { label: 'Calibrate', icon: '🎯', onClick: () => setShowCalibrateModal(true) },
               { label: 'Export Data', icon: '📁', onClick: () => setShowExportDataModal(true) },
+              { label: 'Export Template', icon: '📄', onClick: () => {
+                const csv = 'Station,BS,IS,FS,HI,Rise,Fall,RL\nBM1,1.234,,,,,,-\nTP1,,1.456,1.789,,,,-\nBM2,,,2.345,,,,-';
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Leveling_Template.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+              }},
             ].map((q) => (
               <div 
                 className="db-quick-item" 
