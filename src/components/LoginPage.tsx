@@ -2,6 +2,8 @@ import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
 import { postLog } from './useActivityLogs';
 
+/* ========== COMMENTED OUT - WILL BE RESTORED LATER ==========
+
 interface LoginForm {
   email: string;
   password: string;
@@ -153,6 +155,41 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+========== END OF COMMENTED CODE ========== */
+
+// TEMPORARY UNAVAILABLE PAGE
+const LoginPage: React.FC = () => {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      background: 'linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%)',
+      fontFamily: 'Poppins, sans-serif',
+      textAlign: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        fontSize: '120px',
+        marginBottom: '20px'
+      }}>🚧</div>
+      <h1 style={{
+        fontSize: '48px',
+        fontWeight: '600',
+        color: '#000',
+        marginBottom: '16px'
+      }}>Page Currently Unavailable</h1>
+      <p style={{
+        fontSize: '20px',
+        color: '#757575',
+        maxWidth: '600px'
+      }}>This page is temporarily unavailable. Please check back later.</p>
     </div>
   );
 };
