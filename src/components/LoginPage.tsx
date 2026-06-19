@@ -2,8 +2,6 @@ import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
 import { postLog } from './useActivityLogs';
 
-/* ========== COMMENTED OUT - WILL BE RESTORED LATER ==========
-
 interface LoginForm {
   email: string;
   password: string;
@@ -44,7 +42,7 @@ const LoginPage: React.FC = () => {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormEvent>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
@@ -159,9 +157,7 @@ const LoginPage: React.FC = () => {
   );
 };
 
-========== END OF COMMENTED CODE ========== */
-
-// TEMPORARY UNAVAILABLE PAGE
+/* ========== TEMPORARY UNAVAILABLE PAGE - COMMENTED OUT ==========
 const LoginPage: React.FC = () => {
   return (
     <div style={{
@@ -193,5 +189,6 @@ const LoginPage: React.FC = () => {
     </div>
   );
 };
+========== END OF COMMENTED CODE ========== */
 
 export default LoginPage;
