@@ -1,4 +1,4 @@
-# CMS Login System
+# Survey Leveling System
 
 A software-based approach for error detection and correction in surveying instruments — featuring differential leveling computation, two-peg calibration, automated closure error checking, and CSV data import/export.
 
@@ -12,8 +12,9 @@ A software-based approach for error detection and correction in surveying instru
 ### 📊 Dashboard
 - Time-based greetings (Good morning ☀️, Good afternoon 🌤️, Good evening 🌙)
 - Real-time project statistics and average progress
+- Live dashboard stats: total calibrations, pending calibrations, last closure error (mm)
 - Active projects list with progress tracking (up to 10 projects)
-- Activity logs with search functionality and detailed view
+- Activity logs with inline search and "View All" button
 - Quick access buttons: New Project, Import Data, Calibrate, Export Data, Export Template
 - Skeletal loading states for better UX
 
@@ -22,14 +23,14 @@ A software-based approach for error detection and correction in surveying instru
 - Import projects from CSV template (auto-create project + observations)
 - Export CSV template with project info fields
 - View, edit, and delete projects
-- Project detail modal with full information
+- Project detail modal with full information and step-by-step workflow
 - Delete confirmation modal with project name
 - Automatic progress calculation based on milestones:
   - 0% - New project
   - 25% - Data input completed
-  - 50% - Computation completed
-  - 75% - Calibration completed
-  - 100% - Exported/Completed
+  - 50% - Calibration completed
+  - 75% - Computation confirmed
+  - 100% - Report marked as complete
 
 ### 📋 Data Input
 - Manual leveling observations entry (Station, BS, IS, FS)
@@ -37,34 +38,50 @@ A software-based approach for error detection and correction in surveying instru
 - Save observations to project
 - Automatic progress update to 25% on save
 
+### 🎯 Calibration
+- Two-peg calibration test
+- Auto-calculating collimation error and correction factor
+- Pass/Fail status based on ±3mm tolerance
+- Load and update existing calibration records (dirty tracking)
+- Link calibration to projects or run standalone
+- Automatic progress update to 50% on save
+- Activity log on save and update (includes project name and user)
+
 ### 🧮 Computation
 - Differential leveling computation using Rise & Fall method
 - Auto-calculate HI, Rise, Fall, and RL values
 - Closure error checking and validation
 - Misclose detection with tolerance limits
-- Automatic progress update to 50% on confirm
-
-### 🎯 Calibration
-- Two-peg calibration test
-- Auto-calculating collimation error
-- Pass/Fail status based on tolerance
-- Link calibration to projects or standalone
-- Automatic progress update to 75% on save
+- Confirm button disabled if computation already confirmed (progress ≥ 75%)
+- Automatic progress update to 75% on confirm
+- Activity log on confirm (includes project name, user, misclose, closure status, ΣBS−ΣFS)
 
 ### 📄 Reports
 - Unified reports view (Leveling + Calibration)
 - Filter by type: All, Leveling, Calibration
 - Report statistics: Total, Completed, Pending, Calibrations Passed
-- Date column shows project creation date (when data was imported)
+- Mark as Complete button only shown when computation has been confirmed (progress ≥ 75%)
 - Actions: View project details, Mark as complete (with confirmation), Delete calibration
 - Mark complete confirmation modal
+- Activity log on mark as complete (includes project name and user)
 - Skeletal loading states
 
 ### 📥 Import/Export
 - **Import Data**: Upload CSV template to auto-create project and import observations
 - **Export Template**: Download CSV template with project info fields and observation headers
-- **Export Data**: Export project data to CSV, TXT, PDF (print), or Excel (XML format)
+- **Export Data**: Export project data to CSV, TXT, PDF (jsPDF), or Excel (.xls HTML table format)
 - Automatic progress update to 100% after export
+
+### 📋 Activity Logs
+- Logs all key actions: project creation/deletion, calibration save/update, computation confirmation, mark as complete
+- All log messages include project name and the user who performed the action
+- Inline search on dashboard (by message or category)
+- "View All" button opens full Activity Logs Modal with:
+  - Search filter by message or category
+  - Date range filter (From / To)
+  - Clear filters button
+  - Log count indicator
+  - Click any log to view full details and changes made
 
 ### 🎨 UI/UX Enhancements
 - Smooth scrolling (removed sticky headers)
@@ -84,6 +101,7 @@ A software-based approach for error detection and correction in surveying instru
 - **State Management**: React Hooks (useState, useEffect, custom hooks)
 - **Authentication**: Session-based with bcrypt password hashing
 - **Rate Limiting**: Express rate limiter for login attempts
+- **PDF Export**: jsPDF + jsPDF-AutoTable (loaded via CDN)
 
 ## Installation
 
@@ -136,7 +154,12 @@ cms-login/
 │   │   ├── CalibrateModal.tsx
 │   │   ├── ProjectDetailModal.tsx
 │   │   ├── EditProjectModal.tsx
+│   │   ├── ReportModal.tsx
+│   │   ├── DataInputModal.tsx
+│   │   ├── ComputationModal.tsx
+│   │   ├── CalibrationModal.tsx
 │   │   ├── ActivityLogDetailModal.tsx
+│   │   ├── ActivityLogsModal.tsx
 │   │   ├── useProjects.ts
 │   │   ├── useActivityLogs.ts
 │   │   └── [CSS files]
@@ -149,7 +172,8 @@ cms-login/
 │   │       ├── 002_projects_add_fields.js
 │   │       ├── 003_activity_logs_add_details.js
 │   │       ├── 004_leveling_rows_index.js
-│   │       └── 005_calibrations_add_method.js
+│   │       ├── 005_calibrations_add_method.js
+│   │       └── 006_calibrations_add_distance.js
 │   ├── index.tsx
 │   └── index.css
 ├── public/
@@ -177,13 +201,13 @@ cms-login/
 - Fill in the template:
   ```csv
   LEVELING OBSERVATION TEMPLATE
-  
+
   Project Name,Highway Survey 2024
   Instrument,Leica DNA03
   BM Elevation,100.000
   Method,Rise & Fall
   Distance K,2.5
-  
+
   Station,BS,IS,FS,HI,Rise,Fall,RL
   BM1,1.234,,,,,
   TP1,,1.456,1.789,,,
@@ -193,21 +217,26 @@ cms-login/
 - Project and observations are automatically created
 
 ### 3. Workflow
-1. **Data Input** (Progress: 25%) - Add/import leveling observations
-2. **Computation** (Progress: 50%) - Calculate HI, Rise, Fall, RL, and check closure error
-3. **Calibration** (Progress: 75%) - Perform two-peg test and validate instrument
-4. **Export/Complete** (Progress: 100%) - Export data or mark as complete
+1. **Data Input** (Progress: 25%) — Add/import leveling observations
+2. **Calibration** (Progress: 50%) — Perform two-peg test and validate instrument
+3. **Computation** (Progress: 75%) — Calculate HI, Rise, Fall, RL, and confirm closure error
+4. **Report / Complete** (Progress: 100%) — Review survey report and mark as complete
 
 ### 4. Reports
 - View all project reports and calibration records
 - Filter by type (All, Leveling, Calibration)
-- Mark projects as complete with confirmation
+- Mark as Complete button only visible when computation is confirmed (progress ≥ 75%)
 - View project details and edit information
 
 ### 5. Export Data
 - Select project and format (CSV, TXT, PDF, Excel)
-- Data is exported with all observations
+- Data is exported with all observations and totals row
 - Project progress automatically updates to 100%
+
+### 6. Activity Logs
+- All key actions are automatically logged with project name and user
+- Use the inline search on the dashboard to filter recent logs
+- Click "View All" to open the full logs modal with date range filtering
 
 ## Database Schema
 
@@ -215,7 +244,7 @@ cms-login/
 - **users** - User accounts (id, name, email, password, created_at)
 - **projects** - Survey projects (id, name, instrument, bm_elevation, method, distance_k, status, progress, created_at)
 - **leveling_rows** - Observation data (id, project_id, station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order)
-- **calibrations** - Calibration records (id, project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method, created_at)
+- **calibrations** - Calibration records (id, project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method, distance, created_at)
 - **activity_logs** - System activity logs (id, type, message, sub, details, created_at)
 
 ## API Endpoints
@@ -238,8 +267,13 @@ cms-login/
 
 ### Calibrations
 - `GET /api/calibrations` - Get all calibrations
+- `GET /api/projects/:id/calibration` - Get calibration linked to a project
 - `POST /api/calibrations` - Create calibration record
+- `PATCH /api/calibrations/:id` - Update calibration record
 - `DELETE /api/calibrations/:id` - Delete calibration
+
+### Stats
+- `GET /api/stats/dashboard` - Get dashboard stats (calibration total, pending, last closure mm)
 
 ### Activity Logs
 - `GET /api/logs` - Get recent activity logs (limit 50)
@@ -247,6 +281,4 @@ cms-login/
 
 ## License
 
-© 2026 Survey Leveling System V1.2
-
-
+© 2026 Survey Leveling System V1.3
