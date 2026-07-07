@@ -79,7 +79,7 @@ const DashboardPage: React.FC = () => {
   const [projectToDelete, setProjectToDelete] = useState<{ id: number; name: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [logsSearchQuery, setLogsSearchQuery] = useState('');
-  const { projects, addProject, deleteProject } = useProjects();
+  const { projects, loading, addProject, deleteProject } = useProjects();
   const { logs, fetchLogs } = useActivityLogs();
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
   const userName = sessionStorage.getItem('userName') || 'User';
@@ -254,6 +254,16 @@ const DashboardPage: React.FC = () => {
               { label: 'Import Data', icon: '⬇️', onClick: () => setShowImportDataModal(true) },
               { label: 'Calibrate', icon: '🎯', onClick: () => setShowCalibrateModal(true) },
               { label: 'Export Data', icon: '📁', onClick: () => setShowExportDataModal(true) },
+              { label: 'Export Template', icon: '📄', onClick: () => {
+                const csv = 'LEVELING OBSERVATION TEMPLATE\n\nProject Name,\nInstrument,\nBM Elevation,\nMethod,\nDistance K,\n\nStation,BS,IS,FS,HI,Rise,Fall,RL\n';
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Leveling_Template.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+              }},
             ].map((q) => (
               <div 
                 className="db-quick-item" 
@@ -280,7 +290,23 @@ const DashboardPage: React.FC = () => {
               >View all ›</span>
             </div>
             <div className="db-projects-container">
-              {projects.length === 0 ? (
+              {loading ? (
+                <div className="db-projects-skeleton">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div className="db-project-item" key={i}>
+                      <div className="db-skeleton-dot" />
+                      <div className="db-project-info" style={{ flex: 1 }}>
+                        <div className="db-project-header">
+                          <div className="db-skeleton-text" style={{ width: '60%' }} />
+                          <div className="db-skeleton-text" style={{ width: '30px' }} />
+                        </div>
+                        <div className="db-skeleton-bar" />
+                        <div className="db-skeleton-text" style={{ width: '80%', height: '10px' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : projects.length === 0 ? (
                 <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No projects yet. Click "New Project" to get started.</p>
               ) : (
                 projects.slice(0, 10).map((p) => (

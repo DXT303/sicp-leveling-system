@@ -3,6 +3,7 @@ import './Reports.css';
 import './NewProjectModal.css';
 import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
+import MarkCompleteModal from './MarkCompleteModal';
 import ProjectDetailModal from './ProjectDetailModal';
 import EditProjectModal from './EditProjectModal';
 import { Project as FullProject } from './useProjects';
@@ -25,8 +26,11 @@ type Project = FullProject;
 
 const ReportsPage: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showMarkCompleteModal, setShowMarkCompleteModal] = useState(false);
+  const [projectToComplete, setProjectToComplete] = useState<{ id: number; name: string } | null>(null);
   const [calibrations, setCalibrations] = useState<CalibrationRecord[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'All' | 'Leveling' | 'Calibration'>('All');
   const [toast, setToast] = useState<string | null>(null);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
@@ -57,8 +61,17 @@ const ReportsPage: React.FC = () => {
   }, []);
 
   const fetchData = () => {
-    fetch('/api/calibrations').then(r => r.json()).then(setCalibrations).catch(console.error);
-    fetch('/api/projects').then(r => r.json()).then(setProjects).catch(console.error);
+    setLoading(true);
+    Promise.all([
+      fetch('/api/calibrations').then(r => r.json()),
+      fetch('/api/projects').then(r => r.json())
+    ])
+      .then(([cals, projs]) => {
+        setCalibrations(cals);
+        setProjects(projs);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -87,12 +100,15 @@ const ReportsPage: React.FC = () => {
     setCalibrations(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleMarkComplete = async (projectId: number) => {
-    await fetch(`/api/projects/${projectId}`, {
+  const handleMarkComplete = async () => {
+    if (!projectToComplete) return;
+    await fetch(`/api/projects/${projectToComplete.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ progress: 100, status: 'completed' }),
     });
+    setShowMarkCompleteModal(false);
+    setProjectToComplete(null);
     setToast('Project marked as completed!');
     setTimeout(() => setToast(null), 1500);
     fetchData();
@@ -113,11 +129,10 @@ const ReportsPage: React.FC = () => {
 
   // One row per project showing overall workflow status
   const levelingRows: ReportRow[] = projects.map(p => {
-    const cal = calibrations.find(c => c.project_id === p.id);
     return {
       id: `p-${p.id}`,
       name: `${p.name} — Leveling Report`,
-      date: cal?.date ?? '',
+      date: p.created_at,
       type: 'Leveling',
       status: p.progress === 100 ? 'Completed' : p.progress >= 25 ? 'In Progress' : 'Pending',
       projectId: p.id,
@@ -227,7 +242,28 @@ const ReportsPage: React.FC = () => {
             </div>
 
             <div className="rep-table-wrapper">
-              {filtered.length === 0 ? (
+              {loading ? (
+                <table className="rep-table">
+                  <thead>
+                    <tr>
+                      <th>Report Name</th>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        {Array.from({ length: 5 }).map((_, j) => (
+                          <td key={j}><div className="rep-skeleton" /></td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : filtered.length === 0 ? (
                 <p style={{ padding: '24px', color: '#9197B3', textAlign: 'center' }}>No reports yet. Complete a project workflow to generate reports.</p>
               ) : (
                 <table className="rep-table">
@@ -267,7 +303,10 @@ const ReportsPage: React.FC = () => {
                               <button
                                 className="rep-action-btn"
                                 title="Mark as complete"
-                                onClick={() => handleMarkComplete(row.projectId!)}
+                                onClick={() => {
+                                  setProjectToComplete({ id: row.projectId!, name: row.name });
+                                  setShowMarkCompleteModal(true);
+                                }}
                               >✅</button>
                             )}
                             {row.type === 'Calibration' && row.calibrationId && (
@@ -311,6 +350,15 @@ const ReportsPage: React.FC = () => {
           }}
         />
       )}
+      <MarkCompleteModal
+        isOpen={showMarkCompleteModal}
+        projectName={projectToComplete?.name || ''}
+        onClose={() => {
+          setShowMarkCompleteModal(false);
+          setProjectToComplete(null);
+        }}
+        onConfirm={handleMarkComplete}
+      />
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

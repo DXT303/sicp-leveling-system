@@ -42,7 +42,7 @@ const LoginPage: React.FC = () => {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormEvent>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
@@ -156,5 +156,39 @@ const LoginPage: React.FC = () => {
     </div>
   );
 };
+
+/* ========== TEMPORARY UNAVAILABLE PAGE - COMMENTED OUT ==========
+const LoginPage: React.FC = () => {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      background: 'linear-gradient(135.57deg, #F2F2F7 19.91%, #FAD6B6 138.5%)',
+      fontFamily: 'Poppins, sans-serif',
+      textAlign: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        fontSize: '120px',
+        marginBottom: '20px'
+      }}>🚧</div>
+      <h1 style={{
+        fontSize: '48px',
+        fontWeight: '600',
+        color: '#000',
+        marginBottom: '16px'
+      }}>Page Currently Unavailable</h1>
+      <p style={{
+        fontSize: '20px',
+        color: '#757575',
+        maxWidth: '600px'
+      }}>This page is temporarily unavailable. Please check back later.</p>
+    </div>
+  );
+};
+========== END OF COMMENTED CODE ========== */
 
 export default LoginPage;

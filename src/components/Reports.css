@@ -635,6 +635,21 @@ body {
   background: #F5F5F5;
 }
 
+/* ── Skeleton Loading ── */
+.rep-skeleton {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: rep-shimmer 1.4s infinite;
+  min-width: 40px;
+}
+
+@keyframes rep-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .rep-page {
