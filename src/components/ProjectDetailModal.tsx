@@ -3,11 +3,13 @@ import { Project } from './useProjects';
 import DataInputModal from './DataInputModal';
 import ComputationModal from './ComputationModal';
 import CalibrationModal from './CalibrationModal';
+import ReportModal from './ReportModal';
 
 interface Props {
   project: Project;
   onClose: () => void;
   onEdit: () => void;
+  onProgressUpdate?: (progress: number, status: Project['status']) => void;
 }
 
 const statusColor: Record<string, string> = {
@@ -18,12 +20,12 @@ const statusColor: Record<string, string> = {
 
 const STEPS = [
   { label: 'Data Input',  pct: 25,  desc: 'Enter leveling observations (BS, FS, IFS)' },
-  { label: 'Computation', pct: 50,  desc: 'Run differential leveling & closure check' },
-  { label: 'Calibration', pct: 75,  desc: 'Two-peg calibration test' },
+  { label: 'Calibration', pct: 50,  desc: 'Two-peg calibration test' },
+  { label: 'Computation', pct: 75,  desc: 'Run differential leveling & closure check' },
   { label: 'Report',      pct: 100, desc: 'Generate and export the final report' },
 ];
 
-const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
+const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit, onProgressUpdate }) => {
   const [progress, setProgress] = useState(project.progress ?? 0);
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [displayProgress, setDisplayProgress] = useState(0);
@@ -40,16 +42,13 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
     setProgress(newProgress);
     sessionStorage.setItem('activeProjectProgress', String(newProgress));
     setActiveStep(null);
+    const newStatus = newProgress >= 100 ? 'completed' : newProgress > 0 ? 'active' : 'pending';
+    onProgressUpdate?.(newProgress, newStatus as Project['status']);
   };
 
   const openStep = (idx: number) => {
     sessionStorage.setItem('activeProjectId', String(project.id));
     sessionStorage.setItem('activeProjectProgress', String(progress));
-    if (idx === 3) {
-      // Report step — navigate to reports page
-      window.location.href = '/reports';
-      return;
-    }
     setActiveStep(idx);
   };
 
@@ -123,11 +122,14 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit }) => {
       {activeStep === 0 && (
         <DataInputModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
       )}
-      {activeStep === 1 && (
-        <ComputationModal projectId={project.id} onClose={() => setActiveStep(null)} onConfirmed={handleStepSaved} />
+        {activeStep === 1 && (
+        <CalibrationModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
       )}
       {activeStep === 2 && (
-        <CalibrationModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
+        <ComputationModal projectId={project.id} onClose={() => setActiveStep(null)} onConfirmed={handleStepSaved} />
+      )}
+      {activeStep === 3 && (
+        <ReportModal project={project} onClose={() => setActiveStep(null)} onMarkedComplete={handleStepSaved} />
       )}
     </>
   );

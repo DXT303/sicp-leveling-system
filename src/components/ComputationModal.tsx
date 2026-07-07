@@ -58,12 +58,12 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
     await fetch(`/api/projects/${projectId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ progress: 50 }),
+      body: JSON.stringify({ progress: 75 }),
     });
-    sessionStorage.setItem('activeProjectProgress', '50');
+    sessionStorage.setItem('activeProjectProgress', '75');
     setConfirmed(true);
     setToast(true);
-    setTimeout(() => { setToast(false); onConfirmed(50); }, 1500);
+    setTimeout(() => { setToast(false); onConfirmed(75); }, 1500);
   };
 
   const methodOptions = [

@@ -221,6 +221,10 @@ const ProjectListPage: React.FC = () => {
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
           onEdit={() => setShowEditModal(true)}
+          onProgressUpdate={(progress, status) => {
+            updateProject(selectedProject.id, { progress, status });
+            setSelectedProject(prev => prev ? { ...prev, progress, status } : prev);
+          }}
         />
       )}
       {selectedProject && showEditModal && (
