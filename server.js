@@ -265,6 +265,45 @@ app.delete('/api/calibrations/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// ── Dashboard Stats ──
+app.get('/api/stats/dashboard', async (req, res) => {
+  try {
+    const calTotal = await db.execute('SELECT COUNT(*) as cnt FROM calibrations');
+    const calPending = await db.execute(
+      `SELECT COUNT(*) as cnt FROM projects
+       WHERE progress >= 25
+       AND id NOT IN (SELECT project_id FROM calibrations WHERE project_id IS NOT NULL)`
+    );
+    // Last closure: most recent project with >= 2 rows that has rl values
+    const lastProject = await db.execute(
+      `SELECT p.id, p.distance_k FROM projects p
+       WHERE (SELECT COUNT(*) FROM leveling_rows WHERE project_id = p.id) >= 2
+       ORDER BY p.created_at DESC LIMIT 1`
+    );
+    let lastClosureMm = null;
+    const proj = toObject(lastProject);
+    if (proj) {
+      const rows = await db.execute({
+        sql: 'SELECT bs, fs, rl FROM leveling_rows WHERE project_id = ? ORDER BY row_order',
+        args: [proj.id],
+      });
+      const rws = toObjects(rows);
+      if (rws.length >= 2) {
+        const sumBS = rws.reduce((s, r) => s + (Number(r.bs) || 0), 0);
+        const sumFS = rws.reduce((s, r) => s + (Number(r.fs) || 0), 0);
+        const firstRL = Number(rws[0].rl) || 0;
+        const lastRL  = Number(rws[rws.length - 1].rl) || 0;
+        lastClosureMm = ((sumBS - sumFS) - (lastRL - firstRL)) * 1000;
+      }
+    }
+    res.json({
+      calibrationTotal: Number(toObject(calTotal)?.cnt ?? 0),
+      calibrationPending: Number(toObject(calPending)?.cnt ?? 0),
+      lastClosureMm,
+    });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 // ── Activity Logs ──
 app.get('/api/logs', async (req, res) => {
   try {

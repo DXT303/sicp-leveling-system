@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './Computation.css';
 import './NewProjectModal.css';
 import { Project } from './useProjects';
+import { postLog } from './useActivityLogs';
 
 interface LevelingRow { station: string; bs: number; is: number; fs: number; hi: number; rise: number; fall: number; rl: number; }
 interface CalibrationRecord { instrument: string | null; date: string; error: number; status: string; }
@@ -163,6 +164,7 @@ const ReportModal: React.FC<Props> = ({ project, onClose, onMarkedComplete }) =>
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ progress: 100, status: 'completed' }),
                     });
+                    await postLog('success', `"${project.name}" marked as complete by ${sessionStorage.getItem('userName') || 'Unknown'}`, 'Success / Completed');
                     sessionStorage.setItem('activeProjectProgress', '100');
                     setCompleted(true);
                     setCompleting(false);

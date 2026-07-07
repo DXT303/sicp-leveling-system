@@ -3,6 +3,23 @@ import './ExportDataModal.css';
 import { useProjects } from './useProjects';
 import { updateProjectProgress } from './useProjectProgress';
 
+// Dynamically load jsPDF + autoTable from CDN once
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureJsPDF() {
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+}
+
 interface ExportDataModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -99,81 +116,78 @@ const ExportDataModal: React.FC<ExportDataModalProps> = ({ isOpen, onClose }) =>
         mimeType = 'text/plain';
         fileExtension = 'txt';
       } else if (exportFormat === 'PDF') {
-        // PDF format - Generate HTML and use print to PDF
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <title>${projectData.name} - Export</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 40px; }
-              h1 { color: #FF8D28; border-bottom: 3px solid #FF8D28; padding-bottom: 10px; }
-              .info { margin: 20px 0; }
-              .info-item { margin: 5px 0; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th { background: #FF8D28; color: white; padding: 10px; text-align: left; }
-              td { border: 1px solid #ddd; padding: 8px; }
-              tr:nth-child(even) { background: #f9f9f9; }
-              .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
-            </style>
-          </head>
-          <body>
-            <h1>${projectData.name}</h1>
-            <div class="info">
-              <div class="info-item"><strong>Instrument:</strong> ${projectData.instrument}</div>
-              <div class="info-item"><strong>Method:</strong> ${projectData.method}</div>
-              <div class="info-item"><strong>BM Elevation:</strong> ${projectData.bm_elevation} m</div>
-              <div class="info-item"><strong>Distance:</strong> ${projectData.distance_k} km</div>
-              <div class="info-item"><strong>Created:</strong> ${projectData.created_at}</div>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Station</th><th>BS</th><th>IS</th><th>FS</th><th>HI</th><th>Rise</th><th>Fall</th><th>RL</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rowsData.map((row: any) => `
-                  <tr>
-                    <td>${row.station || '-'}</td>
-                    <td>${row.bs || '-'}</td>
-                    <td>${row.is_val || '-'}</td>
-                    <td>${row.fs || '-'}</td>
-                    <td>${row.hi || '-'}</td>
-                    <td>${row.rise || '-'}</td>
-                    <td>${row.fall || '-'}</td>
-                    <td>${row.rl || '-'}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-            <div class="footer">
-              <p>Generated on ${new Date().toLocaleString()}</p>
-              <p>Survey Leveling System V1.1 © 2026</p>
-            </div>
-          </body>
-          </html>
-        `;
-        
-        // Open in new window and trigger print
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(htmlContent);
-          printWindow.document.close();
-          printWindow.focus();
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        }
-        
-        // Update progress after opening print dialog
+        await ensureJsPDF();
+        const { jsPDF } = (window as any).jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        // Title
+        doc.setFontSize(16);
+        doc.setTextColor(255, 141, 40);
+        doc.text(`Survey Leveling Report — ${projectData.name}`, 14, 16);
+
+        // Project info
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        const info = [
+          ['Instrument', projectData.instrument],
+          ['Method', projectData.method],
+          ['BM Elevation', `${projectData.bm_elevation} m`],
+          ['Distance K', `${projectData.distance_k} km`],
+          ['Created', projectData.created_at],
+          ['Exported', new Date().toLocaleString()],
+        ];
+        let y = 24;
+        info.forEach(([label, value]) => {
+          doc.setFont('helvetica', 'bold'); doc.text(`${label}:`, 14, y);
+          doc.setFont('helvetica', 'normal'); doc.text(String(value ?? ''), 48, y);
+          y += 5;
+        });
+
+        // Totals
+        const totalBS   = rowsData.reduce((s: number, r: any) => s + (Number(r.bs)   || 0), 0);
+        const totalFS   = rowsData.reduce((s: number, r: any) => s + (Number(r.fs)   || 0), 0);
+        const totalRise = rowsData.reduce((s: number, r: any) => s + (Number(r.rise) || 0), 0);
+        const totalFall = rowsData.reduce((s: number, r: any) => s + (Number(r.fall) || 0), 0);
+
+        const fmt = (v: any) => (v != null && v !== '') ? Number(v).toFixed(3) : '-';
+
+        const tableRows = [
+          ...rowsData.map((r: any) => [
+            r.station || '-', fmt(r.bs), fmt(r.is_val), fmt(r.fs),
+            fmt(r.hi), fmt(r.rise), fmt(r.fall), fmt(r.rl),
+          ]),
+          ['TOTALS', totalBS.toFixed(3), '-', totalFS.toFixed(3), '-',
+           totalRise.toFixed(3), totalFall.toFixed(3), '-'],
+        ];
+
+        (doc as any).autoTable({
+          startY: y + 4,
+          head: [['Station', 'BS (m)', 'IS (m)', 'FS (m)', 'HI (m)', 'Rise (m)', 'Fall (m)', 'RL (m)']],
+          body: tableRows,
+          styles: { fontSize: 8, halign: 'center' },
+          headStyles: { fillColor: [255, 141, 40], textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [255, 248, 242] },
+          didParseCell: (data: any) => {
+            if (data.row.index === tableRows.length - 1) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [255, 235, 200];
+            }
+          },
+        });
+
+        // Footer
+        const pageH = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8); doc.setTextColor(150);
+        doc.text('Survey Leveling System V1.1 © 2026', 14, pageH - 8);
+        doc.text(`Page 1`, doc.internal.pageSize.getWidth() - 20, pageH - 8);
+
+        doc.save(`${fileName}.pdf`);
+
         await fetch(`/api/projects/${selectedProjectId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ progress: 100, status: 'completed' }),
         });
-        
         onClose();
         window.location.reload();
         return;

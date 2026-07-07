@@ -10,6 +10,7 @@ import DeleteProjectModal from './DeleteProjectModal';
 import { useProjects } from './useProjects';
 import { useActivityLogs, postLog, dotColor } from './useActivityLogs';
 import ActivityLogDetailModal from './ActivityLogDetailModal';
+import ActivityLogsModal from './ActivityLogsModal';
 import { ActivityLog } from './useActivityLogs';
 
 const IconDashboard = () => (
@@ -81,7 +82,9 @@ const DashboardPage: React.FC = () => {
   const [logsSearchQuery, setLogsSearchQuery] = useState('');
   const { projects, loading, addProject, deleteProject } = useProjects();
   const { logs, fetchLogs } = useActivityLogs();
+  const [dashStats, setDashStats] = useState<{ calibrationTotal: number; calibrationPending: number; lastClosureMm: number | null } | null>(null);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
+  const [showLogsModal, setShowLogsModal] = useState(false);
   const userName = sessionStorage.getItem('userName') || 'User';
   const firstName = userName.split(' ')[0];
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -149,6 +152,10 @@ const DashboardPage: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  useEffect(() => {
+    fetch('/api/stats/dashboard').then(r => r.json()).then(setDashStats).catch(console.error);
+  }, [projects]);
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
@@ -230,8 +237,8 @@ const DashboardPage: React.FC = () => {
             <div className="db-stat-icon">🎯</div>
             <div>
               <p className="db-stat-label">Calibration</p>
-              <p className="db-stat-value">8</p>
-              <p className="db-stat-sub red">1 pending</p>
+              <p className="db-stat-value">{dashStats?.calibrationTotal ?? '—'}</p>
+              <p className="db-stat-sub red">{dashStats ? `${dashStats.calibrationPending} pending` : '—'}</p>
             </div>
           </div>
           <div className="db-divider" />
@@ -239,8 +246,8 @@ const DashboardPage: React.FC = () => {
             <div className="db-stat-icon">📏</div>
             <div>
               <p className="db-stat-label">Last Closure</p>
-              <p className="db-stat-value">10</p>
-              <p className="db-stat-sub red">mm error</p>
+              <p className="db-stat-value">{dashStats?.lastClosureMm != null ? Math.abs(dashStats.lastClosureMm).toFixed(1) : '—'}</p>
+              <p className="db-stat-sub red">{dashStats?.lastClosureMm != null ? 'mm error' : 'no data'}</p>
             </div>
           </div>
         </div>
@@ -339,15 +346,21 @@ const DashboardPage: React.FC = () => {
           <div className="db-logs-card">
             <div className="db-logs-header">
               <h2 className="db-card-title" style={{ marginBottom: 0 }}>Activity logs</h2>
-              <div className="db-logs-search">
-                <span>🔍</span>
-                <input 
-                  type="text" 
-                  placeholder="Search" 
-                  value={logsSearchQuery}
-                  onChange={(e) => setLogsSearchQuery(e.target.value)}
-                  className="db-logs-search-input"
-                />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={() => setShowLogsModal(true)}
+                  style={{ fontSize: 12, color: '#FF8D28', background: 'none', border: '1px solid #FF8D28', borderRadius: 8, padding: '4px 12px', cursor: 'pointer', fontFamily: 'Poppins', fontWeight: 500 }}>
+                  View All
+                </button>
+                <div className="db-logs-search">
+                  <span>🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={logsSearchQuery}
+                    onChange={(e) => setLogsSearchQuery(e.target.value)}
+                    className="db-logs-search-input"
+                  />
+                </div>
               </div>
             </div>
             <div className="db-logs-container">
@@ -355,23 +368,23 @@ const DashboardPage: React.FC = () => {
                 <p style={{ color: '#9197B3', fontSize: '14px', padding: '16px 0' }}>No activity yet.</p>
               ) : (
                 logs
-                  .filter(log => 
+                  .filter(log =>
                     log.message.toLowerCase().includes(logsSearchQuery.toLowerCase()) ||
                     (log.sub && log.sub.toLowerCase().includes(logsSearchQuery.toLowerCase()))
                   )
                   .slice(0, 6)
                   .map((log) => (
-                  <div className="db-log-item" key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
-                    <div className="db-log-dot" style={{ background: dotColor(log.type) }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p className="db-log-title">{log.message}</p>
-                      <p className="db-log-sub">{log.sub ?? log.type}</p>
+                    <div className="db-log-item" key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
+                      <div className="db-log-dot" style={{ background: dotColor(log.type) }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p className="db-log-title">{log.message}</p>
+                        <p className="db-log-sub">{log.sub ?? log.type}</p>
+                      </div>
+                      {log.details && (
+                        <span style={{ fontSize: 11, color: '#0088FF', flexShrink: 0, alignSelf: 'center' }}>View ›</span>
+                      )}
                     </div>
-                    {log.details && (
-                      <span style={{ fontSize: 11, color: '#0088FF', flexShrink: 0, alignSelf: 'center' }}>View ›</span>
-                    )}
-                  </div>
-                ))
+                  ))
               )}
             </div>
 
@@ -398,6 +411,9 @@ const DashboardPage: React.FC = () => {
 
       {selectedLog && (
         <ActivityLogDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />
+      )}
+      {showLogsModal && (
+        <ActivityLogsModal logs={logs} onClose={() => setShowLogsModal(false)} />
       )}
       <NewProjectModal
         isOpen={showNewProjectModal}

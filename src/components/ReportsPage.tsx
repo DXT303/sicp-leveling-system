@@ -7,6 +7,7 @@ import MarkCompleteModal from './MarkCompleteModal';
 import ProjectDetailModal from './ProjectDetailModal';
 import EditProjectModal from './EditProjectModal';
 import { Project as FullProject } from './useProjects';
+import { postLog } from './useActivityLogs';
 
 interface CalibrationRecord {
   id: number;
@@ -107,6 +108,7 @@ const ReportsPage: React.FC = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ progress: 100, status: 'completed' }),
     });
+    await postLog('success', `"${projectToComplete.name}" marked as complete by ${sessionStorage.getItem('userName') || 'Unknown'}`, 'Success / Completed');
     setShowMarkCompleteModal(false);
     setProjectToComplete(null);
     setToast('Project marked as completed!');
@@ -299,7 +301,7 @@ const ReportsPage: React.FC = () => {
                                 }}
                               >👁️</button>
                             )}
-                            {row.type === 'Leveling' && row.projectId && row.status !== 'Completed' && (
+                            {row.type === 'Leveling' && row.projectId && row.status !== 'Completed' && (projects.find(x => x.id === row.projectId)?.progress ?? 0) >= 75 && (
                               <button
                                 className="rep-action-btn"
                                 title="Mark as complete"

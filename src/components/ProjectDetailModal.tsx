@@ -123,10 +123,10 @@ const ProjectDetailModal: React.FC<Props> = ({ project, onClose, onEdit, onProgr
         <DataInputModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
       )}
         {activeStep === 1 && (
-        <CalibrationModal projectId={project.id} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
+        <CalibrationModal projectId={project.id} projectName={project.name} onClose={() => setActiveStep(null)} onSaved={handleStepSaved} />
       )}
       {activeStep === 2 && (
-        <ComputationModal projectId={project.id} onClose={() => setActiveStep(null)} onConfirmed={handleStepSaved} />
+        <ComputationModal projectId={project.id} projectName={project.name} currentProgress={progress} onClose={() => setActiveStep(null)} onConfirmed={handleStepSaved} />
       )}
       {activeStep === 3 && (
         <ReportModal project={project} onClose={() => setActiveStep(null)} onMarkedComplete={handleStepSaved} />

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './Computation.css';
 import './NewProjectModal.css';
+import { postLog } from './useActivityLogs';
 
 interface ComputedRow { station: string; bs: number; is: number; fs: number; hi: number; rise: number; fall: number; rl: number; }
 
 interface Props {
   projectId: number;
+  projectName: string;
   onClose: () => void;
   onConfirmed: (newProgress: number) => void;
+  currentProgress: number;
 }
 
-const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) => {
+const ComputationModal: React.FC<Props> = ({ projectId, projectName, onClose, onConfirmed, currentProgress }) => {
   const [method, setMethod] = useState('rise-fall');
   const [computedRows, setComputedRows] = useState<ComputedRow[]>([]);
   const [confirmed, setConfirmed] = useState(false);
@@ -54,6 +57,9 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
   const allowableError = 0.012 * Math.sqrt(distance);
   const status = Math.abs(misclose) <= allowableError ? 'PASS' : 'FAIL';
 
+  // Already confirmed and no new changes (data input resets to 50, calibration resets to 50)
+  const alreadyConfirmed = currentProgress >= 75;
+
   const handleConfirm = async () => {
     await fetch(`/api/projects/${projectId}`, {
       method: 'PATCH',
@@ -61,6 +67,11 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
       body: JSON.stringify({ progress: 75 }),
     });
     sessionStorage.setItem('activeProjectProgress', '75');
+    await postLog('success', `Computation confirmed for "${projectName}" by ${sessionStorage.getItem('userName') || 'Unknown'}`, 'Success / Computation confirmed', {
+      'Misclose':        { from: '', to: `${(misclose * 1000).toFixed(1)} mm` },
+      'Closure Status':  { from: '', to: status },
+      'ΣBS - ΣFS':       { from: '', to: `${(totalBS - totalFS).toFixed(3)} m` },
+    });
     setConfirmed(true);
     setToast(true);
     setTimeout(() => { setToast(false); onConfirmed(75); }, 1500);
@@ -165,9 +176,9 @@ const ComputationModal: React.FC<Props> = ({ projectId, onClose, onConfirmed }) 
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-            <button onClick={handleConfirm} disabled={confirmed}
-              style={{ padding: '12px 32px', background: confirmed ? '#34C759' : '#FF8D28', color: '#fff', border: 'none', borderRadius: 25, fontFamily: 'Poppins', fontSize: 14, fontWeight: 600, cursor: confirmed ? 'default' : 'pointer' }}>
-              {confirmed ? '✓ Confirmed!' : 'Confirm Computation →'}
+            <button onClick={handleConfirm} disabled={confirmed || alreadyConfirmed}
+              style={{ padding: '12px 32px', background: (confirmed || alreadyConfirmed) ? '#34C759' : '#FF8D28', color: '#fff', border: 'none', borderRadius: 25, fontFamily: 'Poppins', fontSize: 14, fontWeight: 600, cursor: (confirmed || alreadyConfirmed) ? 'default' : 'pointer' }}>
+              {(confirmed || alreadyConfirmed) ? '✓ Confirmed!' : 'Confirm Computation →'}
             </button>
           </div>
           </>

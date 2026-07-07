@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Calibration.css';
 import './NewProjectModal.css';
+import { postLog } from './useActivityLogs';
 
 interface Props {
   projectId: number;
+  projectName: string;
   onClose: () => void;
   onSaved: (newProgress: number) => void;
 }
@@ -11,7 +13,7 @@ interface Props {
 const instrOptions = ['Sokkia B40', 'Leica NA2', 'Topcon AT-B4'];
 const methodOptions = ['Two-Peg Test', 'Collimation Test'];
 
-const CalibrationModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
+const CalibrationModal: React.FC<Props> = ({ projectId, projectName, onClose, onSaved }) => {
   const [instrument, setInstrument] = useState('');
   const [instrumentId, setInstrumentId] = useState('');
   const [testMethod, setTestMethod] = useState('');
@@ -83,6 +85,12 @@ const CalibrationModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
+        await postLog('info', `Calibration updated for "${projectName}" by ${sessionStorage.getItem('userName') || 'Unknown'}`, 'Info / Calibration updated', {
+          Instrument:  { from: '', to: payload.instrument ?? '' },
+          Method:      { from: '', to: payload.method ?? '' },
+          Error:       { from: '', to: payload.error.toFixed(4) + ' m' },
+          Status:      { from: '', to: payload.status },
+        });
       } else {
         const res = await fetch('/api/calibrations', {
           method: 'POST',
@@ -91,6 +99,12 @@ const CalibrationModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
         });
         const created = await res.json();
         if (created?.id) setExistingId(Number(created.id));
+        await postLog('success', `Calibration saved for "${projectName}" by ${sessionStorage.getItem('userName') || 'Unknown'}`, 'Success / Calibration saved', {
+          Instrument: { from: '', to: payload.instrument ?? '' },
+          Method:     { from: '', to: payload.method ?? '' },
+          Error:      { from: '', to: payload.error.toFixed(4) + ' m' },
+          Status:     { from: '', to: payload.status },
+        });
       }
       await fetch(`/api/projects/${projectId}`, {
         method: 'PATCH',
