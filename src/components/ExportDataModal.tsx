@@ -178,84 +178,66 @@ const ExportDataModal: React.FC<ExportDataModalProps> = ({ isOpen, onClose }) =>
         window.location.reload();
         return;
       } else if (exportFormat === 'EXCEL') {
-        // Excel format - Generate Excel XML
-        let excelContent = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
-<Styles>
-  <Style ss:ID="Header">
-    <Font ss:Bold="1" ss:Color="#FFFFFF"/>
-    <Interior ss:Color="#FF8D28" ss:Pattern="Solid"/>
-    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
-  </Style>
-  <Style ss:ID="Title">
-    <Font ss:Bold="1" ss:Size="16" ss:Color="#FF8D28"/>
-  </Style>
-  <Style ss:ID="Info">
-    <Font ss:Bold="1"/>
-  </Style>
-</Styles>
-<Worksheet ss:Name="${projectData.name.substring(0, 31)}">
-<Table>
-  <Row>
-    <Cell ss:StyleID="Title"><Data ss:Type="String">Project: ${projectData.name}</Data></Cell>
-  </Row>
-  <Row>
-    <Cell ss:StyleID="Info"><Data ss:Type="String">Instrument:</Data></Cell>
-    <Cell><Data ss:Type="String">${projectData.instrument}</Data></Cell>
-  </Row>
-  <Row>
-    <Cell ss:StyleID="Info"><Data ss:Type="String">Method:</Data></Cell>
-    <Cell><Data ss:Type="String">${projectData.method}</Data></Cell>
-  </Row>
-  <Row>
-    <Cell ss:StyleID="Info"><Data ss:Type="String">BM Elevation:</Data></Cell>
-    <Cell><Data ss:Type="Number">${projectData.bm_elevation}</Data></Cell>
-  </Row>
-  <Row>
-    <Cell ss:StyleID="Info"><Data ss:Type="String">Distance (k):</Data></Cell>
-    <Cell><Data ss:Type="Number">${projectData.distance_k}</Data></Cell>
-  </Row>
-  <Row>
-    <Cell ss:StyleID="Info"><Data ss:Type="String">Created:</Data></Cell>
-    <Cell><Data ss:Type="String">${projectData.created_at}</Data></Cell>
-  </Row>
-  <Row></Row>
-  <Row>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">Station</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">BS</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">IS</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">FS</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">HI</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">Rise</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">Fall</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">RL</Data></Cell>
-  </Row>
-`;
-        
-        rowsData.forEach((row: any) => {
-          excelContent += `  <Row>
-    <Cell><Data ss:Type="String">${row.station || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.bs || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.is_val || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.fs || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.hi || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.rise || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.fall || ''}</Data></Cell>
-    <Cell><Data ss:Type="Number">${row.rl || ''}</Data></Cell>
-  </Row>
-`;
-        });
-        
-        excelContent += `</Table>
-</Worksheet>
-</Workbook>`;
-        
-        const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
+        const totalBS   = rowsData.reduce((s: number, r: any) => s + (Number(r.bs)     || 0), 0);
+        const totalFS   = rowsData.reduce((s: number, r: any) => s + (Number(r.fs)     || 0), 0);
+        const totalRise = rowsData.reduce((s: number, r: any) => s + (Number(r.rise)   || 0), 0);
+        const totalFall = rowsData.reduce((s: number, r: any) => s + (Number(r.fall)   || 0), 0);
+
+        const htmlTable = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>${projectData.name.substring(0, 31)}</x:Name>
+<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+  body { font-family: Arial, sans-serif; }
+  h2 { color: #FF8D28; }
+  table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+  th { background: #FF8D28; color: #fff; padding: 8px 12px; text-align: center; border: 1px solid #e0a060; }
+  td { padding: 7px 12px; border: 1px solid #ddd; text-align: center; }
+  tr:nth-child(even) td { background: #fff8f2; }
+  .info-table td { border: none; text-align: left; padding: 3px 8px; }
+  .info-table td:first-child { font-weight: bold; color: #555; width: 140px; }
+  .totals td { font-weight: bold; background: #fff3e6; border-top: 2px solid #FF8D28; }
+</style>
+</head>
+<body>
+<h2>Survey Leveling Report — ${projectData.name}</h2>
+<table class="info-table">
+  <tr><td>Instrument:</td><td>${projectData.instrument}</td></tr>
+  <tr><td>Method:</td><td>${projectData.method}</td></tr>
+  <tr><td>BM Elevation:</td><td>${projectData.bm_elevation} m</td></tr>
+  <tr><td>Distance K:</td><td>${projectData.distance_k} km</td></tr>
+  <tr><td>Created:</td><td>${projectData.created_at}</td></tr>
+  <tr><td>Exported:</td><td>${new Date().toLocaleString()}</td></tr>
+</table>
+<table>
+  <thead>
+    <tr><th>Station</th><th>BS (m)</th><th>IS (m)</th><th>FS (m)</th><th>HI (m)</th><th>Rise (m)</th><th>Fall (m)</th><th>RL (m)</th></tr>
+  </thead>
+  <tbody>
+    ${rowsData.map((row: any) => `<tr>
+      <td>${row.station || '-'}</td>
+      <td>${row.bs     != null && row.bs     !== '' ? Number(row.bs).toFixed(3)     : '-'}</td>
+      <td>${row.is_val != null && row.is_val !== '' ? Number(row.is_val).toFixed(3) : '-'}</td>
+      <td>${row.fs     != null && row.fs     !== '' ? Number(row.fs).toFixed(3)     : '-'}</td>
+      <td>${row.hi     != null && row.hi     !== '' ? Number(row.hi).toFixed(3)     : '-'}</td>
+      <td>${row.rise   != null && row.rise   !== '' ? Number(row.rise).toFixed(3)   : '-'}</td>
+      <td>${row.fall   != null && row.fall   !== '' ? Number(row.fall).toFixed(3)   : '-'}</td>
+      <td>${row.rl     != null && row.rl     !== '' ? Number(row.rl).toFixed(3)     : '-'}</td>
+    </tr>`).join('')}
+    <tr class="totals">
+      <td>TOTALS</td>
+      <td>${totalBS.toFixed(3)}</td><td>-</td><td>${totalFS.toFixed(3)}</td><td>-</td>
+      <td>${totalRise.toFixed(3)}</td><td>${totalFall.toFixed(3)}</td><td>-</td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top:24px;color:#888;font-size:12px;">Survey Leveling System V1.1 © 2026</p>
+</body></html>`;
+
+        const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -264,14 +246,12 @@ const ExportDataModal: React.FC<ExportDataModalProps> = ({ isOpen, onClose }) =>
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        
-        // Update project progress to 100% after successful export
+
         await fetch(`/api/projects/${selectedProjectId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ progress: 100, status: 'completed' }),
         });
-        
         onClose();
         window.location.reload();
         return;

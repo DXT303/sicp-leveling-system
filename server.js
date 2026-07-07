@@ -204,10 +204,10 @@ app.get('/api/calibrations', async (req, res) => {
 
 app.post('/api/calibrations', async (req, res) => {
   try {
-    const { project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method } = req.body;
+    const { project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method, distance } = req.body;
     const result = await db.execute({
-      sql: `INSERT INTO calibrations (project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+      sql: `INSERT INTO calibrations (project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method, distance)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
       args: [
         project_id ?? null,
         instrument ?? null,
@@ -219,9 +219,42 @@ app.post('/api/calibrations', async (req, res) => {
         error      ?? null,
         status     ?? null,
         method     ?? null,
+        distance   ?? null,
       ],
     });
     res.json(toObject(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.get('/api/projects/:id/calibration', async (req, res) => {
+  try {
+    const result = await db.execute({
+      sql: 'SELECT * FROM calibrations WHERE project_id = ? ORDER BY created_at DESC LIMIT 1',
+      args: [req.params.id],
+    });
+    res.json(toObject(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.patch('/api/calibrations/:id', async (req, res) => {
+  try {
+    const { instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method, distance } = req.body;
+    await db.execute({
+      sql: `UPDATE calibrations SET
+        instrument = COALESCE(?, instrument),
+        date       = COALESCE(?, date),
+        d1_near    = COALESCE(?, d1_near),
+        d1_far     = COALESCE(?, d1_far),
+        d2_near    = COALESCE(?, d2_near),
+        d2_far     = COALESCE(?, d2_far),
+        error      = COALESCE(?, error),
+        status     = COALESCE(?, status),
+        method     = COALESCE(?, method),
+        distance   = COALESCE(?, distance)
+      WHERE id = ?`,
+      args: [instrument ?? null, date ?? null, d1_near ?? null, d1_far ?? null, d2_near ?? null, d2_far ?? null, error ?? null, status ?? null, method ?? null, distance ?? null, req.params.id],
+    });
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
