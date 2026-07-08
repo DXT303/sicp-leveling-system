@@ -70,6 +70,29 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
   }
 });
 
+// ── Update User (name + password) ──
+app.patch('/api/auth/update', async (req, res) => {
+  const { email, name, currentPassword, newPassword } = req.body;
+  if (!email || !name)
+    return res.status(400).json({ success: false, message: 'Email and name are required.' });
+  try {
+    const result = await db.execute({ sql: 'SELECT id, password FROM users WHERE email = ?', args: [email] });
+    const user = toObject(result);
+    if (!user)
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    if (newPassword) {
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match)
+        return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await db.execute({ sql: 'UPDATE users SET name = ?, password = ? WHERE email = ?', args: [name, hashed, email] });
+    } else {
+      await db.execute({ sql: 'UPDATE users SET name = ? WHERE email = ?', args: [name, email] });
+    }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 // ── Projects ──
 app.get('/api/projects', async (req, res) => {
   try {

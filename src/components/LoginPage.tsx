@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import './auth.css';
 import { postLog } from './useActivityLogs';
+import { COPYRIGHT } from './version';
 
 interface LoginForm {
   email: string;
@@ -126,7 +127,7 @@ const LoginPage: React.FC = () => {
         <div className="auth-bg-image" />
 
       </div>
-      <p className="auth-copyright">© 2026 Survey Leveling System V1.1</p>
+      <p className="auth-copyright">{COPYRIGHT}</p>
 
       {showError && (
         <div className="error-modal-overlay" onClick={() => setShowError(false)}>

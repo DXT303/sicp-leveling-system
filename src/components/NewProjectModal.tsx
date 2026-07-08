@@ -4,7 +4,7 @@ import './NewProjectModal.css';
 interface NewProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { projectName: string; instrument: string; bmElevation: string; method: string; distanceK: string }) => void;
+  onSave: (data: { projectName: string; instrument: string; bmElevation: string; method: string; distanceK: string }) => Promise<void> | void;
   existingNames: string[];
 }
 
@@ -35,7 +35,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const isDuplicate = existingNames.some(
       (n) => n.toLowerCase() === formData.projectName.trim().toLowerCase()
@@ -46,10 +46,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
       return;
     }
     try {
-      onSave(formData);
+      await onSave(formData);
       setFormData({ projectName: '', instrument: 'Auto Level', bmElevation: '', method: 'Hi Method (Height of Instrument)', distanceK: '' });
       setToast({ type: 'success', msg: 'Project created successfully!' });
-      setTimeout(onClose, 1500);
+      setTimeout(() => { setToast(null); onClose(); }, 1500);
     } catch {
       setToast({ type: 'error', msg: 'Failed to create project. Please try again.' });
       setTimeout(() => setToast(null), 3000);

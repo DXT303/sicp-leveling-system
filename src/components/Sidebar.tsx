@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './Sidebar.css';
+import AboutModal from './AboutModal';
+import SettingsModal from './SettingsModal';
 
 const IconDashboard = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -27,6 +30,14 @@ const IconPin = ({ pinned }: { pinned: boolean }) => (
   </svg>
 );
 
+const IconAbout = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="8" strokeWidth="2.5" strokeLinecap="round"/>
+    <line x1="12" y1="12" x2="12" y2="16"/>
+  </svg>
+);
+
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: <IconDashboard />, path: '/dashboard' },
   { label: 'Projects',  icon: <IconProjects />,  path: '/projects'  },
@@ -45,8 +56,21 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
-  const [pinned, setPinned] = useState(() => localStorage.getItem('sb_pinned') === 'true');
+  const [pinned, setPinned] = useState(() => localStorage.getItem('sb_pinned') !== 'false');
   const [hovered, setHovered] = useState(() => sessionStorage.getItem('sb_was_expanded') === 'true');
+  const [showAbout, setShowAbout] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const userRef = React.useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  const handleUserClick = () => {
+    if (userRef.current) {
+      const rect = userRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.top, left: rect.right + 8 });
+    }
+    setShowUserMenu(p => !p);
+  };
   const expanded = pinned || hovered;
   const userName = sessionStorage.getItem('userName') || 'User';
   const avatarLetter = userName.charAt(0).toUpperCase();
@@ -96,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
     >
       <div>
         <div className="sb-header">
-          <span className="sb-title">LOGO</span>
+          <img src="/lexen logo.png" alt="Lexen Logo" className="sb-logo" />
           <button className="sb-toggle" onClick={togglePin} title={pinned ? 'Unpin sidebar' : 'Pin sidebar open'}>
             <IconPin pinned={pinned} />
           </button>
@@ -119,13 +143,51 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
           })}
         </nav>
       </div>
-      <div className="sb-user">
-        <div className="sb-user-avatar">{avatarLetter}</div>
-        <div className="sb-user-info">
-          <span className="sb-user-name">{userName}</span>
-          <span className="sb-user-role">Engineer</span>
+      <div className="sb-bottom">
+        <div className="sb-user" ref={userRef} onClick={handleUserClick} title="Account">
+          <div className="sb-user-avatar">{avatarLetter}</div>
+          <div className="sb-user-info">
+            <span className="sb-user-name">{userName}</span>
+            <span className="sb-user-role">Engineer</span>
+          </div>
+          <span className="sb-user-chevron">›</span>
+        </div>
+
+        {showUserMenu && createPortal(
+          <>
+            <div className="sb-user-menu-backdrop" onClick={() => setShowUserMenu(false)} />
+            <div className="sb-user-menu" style={{ top: menuPos.top, left: menuPos.left }}>
+              <div className="sb-user-menu-item" onClick={() => { setShowUserMenu(false); setShowSettings(true); }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Settings
+              </div>
+              <div className="sb-user-menu-item sb-user-menu-logout" onClick={() => { setShowUserMenu(false); onLogout(); }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
+        <div
+          className="sb-nav-item sb-about-item"
+          title="About"
+          onClick={() => setShowAbout(true)}
+        >
+          <span className="sb-nav-icon"><IconAbout /></span>
+          <span className="sb-nav-label">About</span>
+          <span className="sb-nav-chevron">›</span>
         </div>
       </div>
+      <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </aside>
   );
 };

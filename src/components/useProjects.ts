@@ -30,6 +30,7 @@ export function useProjects() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    if (!res.ok) throw new Error(await res.text());
     const newProject = await res.json();
     setProjects(prev => [newProject, ...prev]);
     return newProject;

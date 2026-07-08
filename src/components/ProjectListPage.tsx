@@ -65,8 +65,8 @@ const ProjectListPage: React.FC = () => {
     window.location.replace("/");
   };
 
-  const handleNewProjectSave = (data: { projectName: string; instrument: string; bmElevation: string; method: string; distanceK: string }) => {
-    addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK });
+  const handleNewProjectSave = async (data: { projectName: string; instrument: string; bmElevation: string; method: string; distanceK: string }) => {
+    await addProject({ name: data.projectName, instrument: data.instrument, bmElevation: data.bmElevation, method: data.method, distanceK: data.distanceK });
   };
 
   const handleEditSave = async (data: Partial<Omit<Project, "id" | "created_at">>) => {
