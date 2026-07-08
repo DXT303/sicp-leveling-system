@@ -550,19 +550,16 @@ Step 1: Data Input (Progress → 25%)
   └─ Enter or import leveling observations
   └─ System auto-calculates HI and ELEV
   └─ Closure check displayed in real-time
-
-Step 2: Computation (Progress → 75%)
-  └─ Rise & Fall method applied to all rows
-  └─ Arithmetic check (3-way verification)
-  └─ Closure error vs. allowable tolerance (12mm√K)
-  └─ Confirm button locks computation
-
-Step 3: Calibration (Progress → 50%)
+Step 2: Calibration (Progress → 50%)
   └─ Two-Peg Test data entry
   └─ Collimation error auto-calculated
   └─ Pass/Fail against ±3mm tolerance
   └─ Record saved and linked to project
-
+Step 3: Computation (Progress → 75%)
+  └─ Rise & Fall method applied to all rows
+  └─ Arithmetic check (3-way verification)
+  └─ Closure error vs. allowable tolerance (12mm√K)
+  └─ Confirm button locks computation
 Step 4: Report / Export (Progress → 100%)
   └─ View unified report
   └─ Export to CSV / TXT / PDF / Excel
