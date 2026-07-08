@@ -215,13 +215,24 @@ const ReportsPage: React.FC = () => {
         <div className="rep-content">
           <div className="rep-header">
             <h1 className="rep-title">Reports</h1>
-            <div className="rep-settings-wrapper">
-              <div className="rep-settings-icon" onClick={() => setShowLogoutModal(true)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
+            <div className="pl-header-right">
+              <div className="pl-search">
+                <span>&#128269;</span>
+                <input
+                  type="text"
+                  placeholder="Search reports..."
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                />
+              </div>
+              <div className="rep-settings-wrapper">
+                <div className="rep-settings-icon" onClick={() => setShowLogoutModal(true)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -273,10 +284,6 @@ const ReportsPage: React.FC = () => {
             </div>
             {/* Filter Bar */}
             <div className="rep-filter-bar">
-              <div className="rep-search">
-                <span>🔍</span>
-                <input type="text" placeholder="Search reports..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} />
-              </div>
               <div className="rep-filter-date"><label>From</label><DatePicker value={dateFrom} onChange={v => { setDateFrom(v); setCurrentPage(1); }} max={dateTo || undefined} placeholder="Start date" /></div>
               <div className="rep-filter-date"><label>To</label><DatePicker value={dateTo} onChange={v => { setDateTo(v); setCurrentPage(1); }} min={dateFrom || undefined} max={new Date().toISOString().slice(0,10)} placeholder="End date" /></div>
               {(search || dateFrom || dateTo) && (
