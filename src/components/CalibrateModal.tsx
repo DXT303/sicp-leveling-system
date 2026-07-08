@@ -6,6 +6,12 @@ interface CalibrateModalProps {
   onClose: () => void;
 }
 
+const Chevron = () => (
+  <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+    <path d="M1 1L6 6L11 1" stroke="#9197B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 const CalibrateModal: React.FC<CalibrateModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     instrument: 'Auto Level',
@@ -60,9 +66,7 @@ const CalibrateModal: React.FC<CalibrateModalProps> = ({ isOpen, onClose }) => {
                   onClick={() => setOpenDropdown(openDropdown === 'instrument' ? null : 'instrument')}
                 >
                   {formData.instrument}
-                  <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                    <path d="M1 1L6 6L11 1" stroke="#9197B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <Chevron />
                 </div>
                 {openDropdown === 'instrument' && (
                   <div className="custom-dropdown-options">
@@ -102,9 +106,7 @@ const CalibrateModal: React.FC<CalibrateModalProps> = ({ isOpen, onClose }) => {
                   onClick={() => setOpenDropdown(openDropdown === 'testMethod' ? null : 'testMethod')}
                 >
                   {formData.testMethod}
-                  <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                    <path d="M1 1L6 6L11 1" stroke="#9197B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <Chevron />
                 </div>
                 {openDropdown === 'testMethod' && (
                   <div className="custom-dropdown-options">

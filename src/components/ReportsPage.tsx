@@ -8,6 +8,7 @@ import ProjectDetailModal from './ProjectDetailModal';
 import EditProjectModal from './EditProjectModal';
 import { Project as FullProject } from './useProjects';
 import { postLog } from './useActivityLogs';
+import DatePicker from './DatePicker';
 
 interface CalibrationRecord {
   id: number;
@@ -33,6 +34,13 @@ const ReportsPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'All' | 'Leveling' | 'Calibration'>('All');
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [sortKey, setSortKey] = useState<'name' | 'date' | 'type' | 'status'>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [toast, setToast] = useState<string | null>(null);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
   const [editProject, setEditProject] = useState<Project | null>(null);
@@ -154,7 +162,32 @@ const ReportsPage: React.FC = () => {
     }));
 
   const allRows: ReportRow[] = [...levelingRows, ...calibrationRows];
-  const filtered = filter === 'All' ? allRows : allRows.filter(r => r.type === filter);
+
+  const handleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+    setCurrentPage(1);
+  };
+  const SortIcon = ({ col }: { col: typeof sortKey }) => (
+    <span style={{ marginLeft: 4, opacity: sortKey === col ? 1 : 0.3 }}>{sortKey === col && sortDir === 'desc' ? '▼' : '▲'}</span>
+  );
+  const handleFilterChange = (f: 'All' | 'Leveling' | 'Calibration') => { setFilter(f); setCurrentPage(1); };
+
+  const filtered = allRows
+    .filter(r => filter === 'All' || r.type === filter)
+    .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(r => !dateFrom || r.date >= dateFrom)
+    .filter(r => !dateTo || r.date <= dateTo)
+    .sort((a, b) => {
+      const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
+      return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = filtered.slice((safePage - 1) * rowsPerPage, safePage * rowsPerPage);
+  const startRow = filtered.length === 0 ? 0 : (safePage - 1) * rowsPerPage + 1;
+  const endRow = Math.min(safePage * rowsPerPage, filtered.length);
 
   const total = allRows.length;
   const completed = allRows.filter(r => r.status === 'Completed').length;
@@ -234,58 +267,54 @@ const ReportsPage: React.FC = () => {
               <h2>All Reports</h2>
               <div className="rep-filters">
                 {(['All', 'Leveling', 'Calibration'] as const).map(f => (
-                  <button
-                    key={f}
-                    className={`rep-filter-btn${filter === f ? ' active' : ''}`}
-                    onClick={() => setFilter(f)}
-                  >{f}</button>
+                  <button key={f} className={`rep-filter-btn${filter === f ? ' active' : ''}`} onClick={() => handleFilterChange(f)}>{f}</button>
                 ))}
               </div>
+            </div>
+            {/* Filter Bar */}
+            <div className="rep-filter-bar">
+              <div className="rep-search">
+                <span>🔍</span>
+                <input type="text" placeholder="Search reports..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} />
+              </div>
+              <div className="rep-filter-date"><label>From</label><DatePicker value={dateFrom} onChange={v => { setDateFrom(v); setCurrentPage(1); }} max={dateTo || undefined} placeholder="Start date" /></div>
+              <div className="rep-filter-date"><label>To</label><DatePicker value={dateTo} onChange={v => { setDateTo(v); setCurrentPage(1); }} min={dateFrom || undefined} max={new Date().toISOString().slice(0,10)} placeholder="End date" /></div>
+              {(search || dateFrom || dateTo) && (
+                <button className="rep-filter-clear" onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setCurrentPage(1); }}>Clear</button>
+              )}
             </div>
 
             <div className="rep-table-wrapper">
               {loading ? (
                 <table className="rep-table">
-                  <thead>
-                    <tr>
-                      <th>Report Name</th>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}>
-                        {Array.from({ length: 5 }).map((_, j) => (
-                          <td key={j}><div className="rep-skeleton" /></td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
+                  <thead><tr>
+                    <th>#</th><th>Report Name</th><th>Date</th><th>Type</th><th>Status</th><th>Actions</th>
+                  </tr></thead>
+                  <tbody>{Array.from({ length: 5 }).map((_, i) => (<tr key={i}>{Array.from({ length: 6 }).map((_, j) => (<td key={j}><div className="rep-skeleton" /></td>))}</tr>))}</tbody>
                 </table>
               ) : filtered.length === 0 ? (
-                <p style={{ padding: '24px', color: '#9197B3', textAlign: 'center' }}>No reports yet. Complete a project workflow to generate reports.</p>
+                <p style={{ padding: '24px', color: '#9197B3', textAlign: 'center' }}>{search || dateFrom || dateTo ? 'No reports match your filters.' : 'No reports yet. Complete a project workflow to generate reports.'}</p>
               ) : (
                 <table className="rep-table">
-                  <thead>
-                    <tr>
-                      <th>Report Name</th>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
+                  <thead><tr>
+                    <th>#</th>
+                    <th className="rep-th-sort" onClick={() => handleSort('name')}>Report Name <SortIcon col="name" /></th>
+                    <th className="rep-th-sort" onClick={() => handleSort('date')}>Date <SortIcon col="date" /></th>
+                    <th className="rep-th-sort" onClick={() => handleSort('type')}>Type <SortIcon col="type" /></th>
+                    <th className="rep-th-sort" onClick={() => handleSort('status')}>Status <SortIcon col="status" /></th>
+                    <th>Actions</th>
+                  </tr></thead>
                   <tbody>
-                    {filtered.map((row) => (
+                    {paginated.map((row, idx) => {
+                      const statusClass = row.status.toLowerCase().replace(/ /g, '-');
+                      return (
                       <tr key={row.id}>
+                        <td style={{ color: '#9197B3', fontSize: 13 }}>{(safePage - 1) * rowsPerPage + idx + 1}</td>
                         <td className="rep-name">{row.name}</td>
                         <td>{row.date || '—'}</td>
                         <td><span className="rep-type-badge">{row.type}</span></td>
                         <td>
-                          <span className={`rep-status ${row.status.toLowerCase().replace(' ', '-')}`}>
+                          <span className={`rep-status ${statusClass}`}>
                             {row.status}
                           </span>
                         </td>
@@ -321,11 +350,39 @@ const ReportsPage: React.FC = () => {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
             </div>
+            {!loading && filtered.length > 0 && (
+              <div className="rep-pagination">
+                <div className="rep-rows-select">
+                  <span>Rows per page:</span>
+                  <select value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
+                    {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div className="rep-pagination-info">Showing {startRow}–{endRow} of {filtered.length} reports</div>
+                <div className="rep-pagination-controls">
+                  <button className="rep-page-btn" onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+                  <button className="rep-page-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>‹</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(n => n === 1 || n === totalPages || Math.abs(n - safePage) <= 1)
+                    .reduce<(number | string)[]>((acc, n, i, arr) => {
+                      if (i > 0 && (n as number) - (arr[i - 1] as number) > 1) acc.push('…');
+                      acc.push(n); return acc;
+                    }, [])
+                    .map((n, i) => typeof n === 'string'
+                      ? <span key={`e${i}`} className="rep-page-btn" style={{ border: 'none', cursor: 'default' }}>{n}</span>
+                      : <button key={n} className={`rep-page-btn${safePage === n ? ' active' : ''}`} onClick={() => setCurrentPage(n)}>{n}</button>
+                    )}
+                  <button className="rep-page-btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>›</button>
+                  <button className="rep-page-btn" onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import './ImportDataModal.css';
 import { useProjects } from './useProjects';
 import { postLog } from './useActivityLogs';

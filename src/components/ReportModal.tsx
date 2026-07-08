@@ -45,7 +45,7 @@ const ReportModal: React.FC<Props> = ({ project, onClose, onMarkedComplete }) =>
   const totalRise = rows.reduce((s, r) => s + r.rise, 0);
   const totalFall = rows.reduce((s, r) => s + r.fall, 0);
   const misclose  = rows.length > 1 ? (totalBS - totalFS) - (rows[rows.length - 1].rl - rows[0].rl) : 0;
-  const allowable = 0.012 * Math.sqrt(project.distance_k || 1);
+  const allowable = 0.012 * Math.sqrt(Number(project.distance_k) || 1);
   const closureStatus = Math.abs(misclose) <= allowable ? 'PASS' : 'FAIL';
 
   return (

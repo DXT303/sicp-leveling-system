@@ -4,49 +4,6 @@ import Sidebar from './Sidebar';
 import LogoutModal from './LogoutModal';
 import { updateProjectProgress } from './useProjectProgress';
 
-const IconDashboard = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-  </svg>
-);
-
-const IconDataInput = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M12 5v14M5 12h14"/>
-    <rect x="3" y="3" width="18" height="18" rx="3"/>
-  </svg>
-);
-
-const IconComputation = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M9 7h6M9 12h6M9 17h4"/>
-    <rect x="3" y="3" width="18" height="18" rx="3"/>
-  </svg>
-);
-
-const IconCalibration = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <circle cx="12" cy="12" r="9"/>
-    <circle cx="12" cy="12" r="3"/>
-    <line x1="12" y1="3" x2="12" y2="6"/>
-    <line x1="12" y1="18" x2="12" y2="21"/>
-    <line x1="3" y1="12" x2="6" y2="12"/>
-    <line x1="18" y1="12" x2="21" y2="12"/>
-  </svg>
-);
-
-const IconReports = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-    <line x1="8" y1="13" x2="16" y2="13"/>
-    <line x1="8" y1="17" x2="13" y2="17"/>
-  </svg>
-);
-
 interface ComputedRow {
   station: string;
   bs: number;
@@ -97,7 +54,6 @@ const CustomDropdown: React.FC<{
 };
 
 const ComputationPage: React.FC<{ projectId?: number | null }> = ({ projectId }) => {
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [method, setMethod] = useState('rise-fall');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [projectName, setProjectName] = useState('');
@@ -318,11 +274,11 @@ const ComputationPage: React.FC<{ projectId?: number | null }> = ({ projectId })
                   </div>
                 ))
               ) : (
-                <>
+                <React.Fragment>
                   <div className="comp-check-item"><span>ΣBS - ΣFS:</span><span className="comp-value">{(totalBS - totalFS).toFixed(3)} m</span></div>
                   <div className="comp-check-item"><span>ΣRise - ΣFall:</span><span className="comp-value">{(totalRise - totalFall).toFixed(3)} m</span></div>
                   <div className="comp-check-item"><span>Last RL - First RL:</span><span className="comp-value">{(sampleData[sampleData.length - 1].rl - sampleData[0].rl).toFixed(3)} m</span></div>
-                </>
+                </React.Fragment>
               )}
             </div>
             <div className="comp-card">
@@ -335,12 +291,12 @@ const ComputationPage: React.FC<{ projectId?: number | null }> = ({ projectId })
                   </div>
                 ))
               ) : (
-                <>
+                <React.Fragment>
                   <div className="comp-check-item"><span>Misclose:</span><span className="comp-value">{(misclose * 1000).toFixed(1)} mm</span></div>
                   <div className="comp-check-item"><span>Distance:</span><span className="comp-value">{distance.toFixed(1)} km</span></div>
                   <div className="comp-check-item"><span>Allowable Error:</span><span className="comp-value">±{(allowableError * 1000).toFixed(1)} mm</span></div>
                   <div className="comp-status-item"><span>Status:</span><span className={`comp-status ${status.toLowerCase()}`}>{status}</span></div>
-                </>
+                </React.Fragment>
               )}
             </div>
           </div>

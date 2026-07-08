@@ -197,7 +197,7 @@ const DataInputModal: React.FC<Props> = ({ projectId, onClose, onSaved }) => {
               <button className="di-btn-clear" onClick={() => setRows([{ id: Date.now(), station: 'BM1', bs: '', fs: '', ifs: '', hi: '', elev: '' }])}>Clear All</button>
               <button className="di-btn-save" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Data'}</button>
             </div>
-            </div>
+          </div>
           )}
         </div>
       </div>

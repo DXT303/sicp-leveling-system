@@ -87,9 +87,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
     }
   };
 
+  const sidebarClass = `sb-sidebar ${expanded ? 'expanded' : ''}`;
   return (
     <aside
-      className={`sb-sidebar ${expanded ? 'expanded' : ''}`}
+      className={sidebarClass}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

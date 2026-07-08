@@ -402,13 +402,12 @@ body, html, #root {
 /* ── Main ── */
 .db-main {
   flex: 1;
-  padding: 0 40px 60px;
+  padding: 0 40px 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
   min-width: 0;
   height: 100vh;
+  overflow: hidden;
   position: relative;
   z-index: 2;
 }
@@ -419,22 +418,25 @@ body, html, #root {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
+  height: 100%;
+  overflow: hidden;
 }
 
 .db-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32px 0 20px;
+  padding: 16px 0 8px;
   margin: 0;
+  flex-shrink: 0;
 }
 
 .db-header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   position: relative;
 }
 
@@ -488,9 +490,10 @@ body, html, #root {
   background: #FFFFFF;
   box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
   border-radius: 20px;
-  padding: 28px 36px;
+  padding: 20px 36px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .db-stat {
@@ -552,7 +555,8 @@ body, html, #root {
   background: #FFFFFF;
   box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
   border-radius: 20px;
-  padding: 24px 36px;
+  padding: 16px 36px;
+  flex-shrink: 0;
 }
 
 .db-card-title {
@@ -560,7 +564,7 @@ body, html, #root {
   font-weight: 600;
   color: #000000;
   letter-spacing: -0.01em;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   user-select: none;
 }
 
@@ -606,6 +610,7 @@ body, html, #root {
   gap: 16px;
   align-items: stretch;
   flex: 1;
+  min-height: 0;
 }
 
 /* ── Active Projects card ── */
@@ -614,10 +619,10 @@ body, html, #root {
   background: #FFFFFF;
   box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
   border-radius: 20px;
-  padding: 24px 28px;
+  padding: 20px 28px;
   display: flex;
   flex-direction: column;
-  max-height: 500px;
+  min-height: 0;
 }
 
 .db-projects-container {
@@ -695,10 +700,10 @@ body, html, #root {
   background: #FFFFFF;
   box-shadow: 0px 10px 60px rgba(226, 236, 249, 0.5);
   border-radius: 20px;
-  padding: 24px 28px;
+  padding: 20px 28px;
   display: flex;
   flex-direction: column;
-  max-height: 500px;
+  min-height: 0;
 }
 
 .db-logs-header {

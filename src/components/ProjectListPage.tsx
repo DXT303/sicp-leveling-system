@@ -7,97 +7,7 @@ import NewProjectModal from "./NewProjectModal";
 import ProjectDetailModal from "./ProjectDetailModal";
 import EditProjectModal from "./EditProjectModal";
 import { postLog } from "./useActivityLogs";
-
-const IconDashboard = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-  </svg>
-);
-
-const IconDataInput = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <path d="M12 5v14M5 12h14" />
-    <rect x="3" y="3" width="18" height="18" rx="3" />
-  </svg>
-);
-
-const IconComputation = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <path d="M9 7h6M9 12h6M9 17h4" />
-    <rect x="3" y="3" width="18" height="18" rx="3" />
-  </svg>
-);
-
-const IconCalibration = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <circle cx="12" cy="12" r="9" />
-    <circle cx="12" cy="12" r="3" />
-    <line x1="12" y1="3" x2="12" y2="6" />
-    <line x1="12" y1="18" x2="12" y2="21" />
-    <line x1="3" y1="12" x2="6" y2="12" />
-    <line x1="18" y1="12" x2="21" y2="12" />
-  </svg>
-);
-
-const IconReports = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="8" y1="13" x2="16" y2="13" />
-    <line x1="8" y1="17" x2="13" y2="17" />
-  </svg>
-);
-
-const IconProjects = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <path d="M3 7h18M3 12h18M3 17h18" />
-  </svg>
-);
+import DatePicker from "./DatePicker";
 
 const statusColor: Record<string, string> = {
   active: "#FF8D28",
@@ -115,6 +25,13 @@ const ProjectListPage: React.FC = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'pending'>('all');
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortKey, setSortKey] = useState<'name' | 'instrument' | 'status' | 'created_at'>('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => sessionStorage.getItem("isLoggedIn") === "true",
   );
@@ -182,9 +99,31 @@ const ProjectListPage: React.FC = () => {
 
   if (!isAuthenticated) return null;
 
-  const filtered = projects.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()),
+  const handleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+    setCurrentPage(1);
+  };
+  const SortIcon = ({ col }: { col: typeof sortKey }) => (
+    <span style={{ marginLeft: 4, opacity: sortKey === col ? 1 : 0.3 }}>{sortKey === col && sortDir === 'desc' ? '▼' : '▲'}</span>
   );
+
+  const filtered = projects
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(p => statusFilter === 'all' || p.status === statusFilter)
+    .filter(p => !dateFrom || p.created_at >= dateFrom)
+    .filter(p => !dateTo || p.created_at <= dateTo)
+    .sort((a, b) => {
+      const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
+      return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = filtered.slice((safePage - 1) * rowsPerPage, safePage * rowsPerPage);
+  const startRow = filtered.length === 0 ? 0 : (safePage - 1) * rowsPerPage + 1;
+  const endRow = Math.min(safePage * rowsPerPage, filtered.length);
+
+  const handleSearch = (val: string) => { setSearch(val); setCurrentPage(1); };
 
   return (
     <div className="pl-page">
@@ -252,7 +191,7 @@ const ProjectListPage: React.FC = () => {
                   type="text"
                   placeholder="Search projects..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>
               <div className="pl-settings-wrapper">
@@ -310,9 +249,27 @@ const ProjectListPage: React.FC = () => {
           <div className="pl-table-card">
             <div className="pl-table-header">
               <h2>All Projects</h2>
-              <button className="pl-btn-new" onClick={() => setShowNewProjectModal(true)}>
-                + New Project
-              </button>
+              <button className="pl-btn-new" onClick={() => setShowNewProjectModal(true)}>+ New Project</button>
+            </div>
+            {/* Filter Bar */}
+            <div className="pl-filter-bar">
+              <select className="pl-filter-select" value={statusFilter} onChange={e => { setStatusFilter(e.target.value as typeof statusFilter); setCurrentPage(1); }}>
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+              <div className="pl-filter-date">
+                <label>From</label>
+                <DatePicker value={dateFrom} onChange={v => { setDateFrom(v); setCurrentPage(1); }} max={dateTo || undefined} placeholder="Start date" />
+              </div>
+              <div className="pl-filter-date">
+                <label>To</label>
+                <DatePicker value={dateTo} onChange={v => { setDateTo(v); setCurrentPage(1); }} min={dateFrom || undefined} max={new Date().toISOString().slice(0,10)} placeholder="End date" />
+              </div>
+              {(statusFilter !== 'all' || dateFrom || dateTo) && (
+                <button className="pl-filter-clear" onClick={() => { setStatusFilter('all'); setDateFrom(''); setDateTo(''); setCurrentPage(1); }}>Clear</button>
+              )}
             </div>
 
             {loading ? (
@@ -321,13 +278,13 @@ const ProjectListPage: React.FC = () => {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Project Name</th>
-                      <th>Instrument</th>
+                      <th className="pl-th-sort" onClick={() => handleSort('name')}>Project Name <SortIcon col="name" /></th>
+                      <th className="pl-th-sort" onClick={() => handleSort('instrument')}>Instrument <SortIcon col="instrument" /></th>
                       <th>Method</th>
                       <th>BM Elev.</th>
                       <th>Distance (km)</th>
-                      <th>Status</th>
-                      <th>Created</th>
+                      <th className="pl-th-sort" onClick={() => handleSort('status')}>Status <SortIcon col="status" /></th>
+                      <th className="pl-th-sort" onClick={() => handleSort('created_at')}>Created <SortIcon col="created_at" /></th>
                       <th></th>
                     </tr>
                   </thead>
@@ -344,8 +301,8 @@ const ProjectListPage: React.FC = () => {
               </div>
             ) : filtered.length === 0 ? (
               <div className="pl-empty">
-                {search
-                  ? "No projects match your search."
+                {search || statusFilter !== 'all' || dateFrom || dateTo
+                  ? "No projects match your filters."
                   : "No projects yet. Create one from the Dashboard."}
               </div>
             ) : (
@@ -354,20 +311,20 @@ const ProjectListPage: React.FC = () => {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Project Name</th>
-                      <th>Instrument</th>
+                      <th className="pl-th-sort" onClick={() => handleSort('name')}>Project Name <SortIcon col="name" /></th>
+                      <th className="pl-th-sort" onClick={() => handleSort('instrument')}>Instrument <SortIcon col="instrument" /></th>
                       <th>Method</th>
                       <th>BM Elev.</th>
                       <th>Distance (km)</th>
-                      <th>Status</th>
-                      <th>Created</th>
+                      <th className="pl-th-sort" onClick={() => handleSort('status')}>Status <SortIcon col="status" /></th>
+                      <th className="pl-th-sort" onClick={() => handleSort('created_at')}>Created <SortIcon col="created_at" /></th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((p, idx) => (
+                    {paginated.map((p, idx) => (
                       <tr key={p.id} style={{ cursor: "pointer" }} onClick={() => { setSelectedProject(p); setShowEditModal(false); }}>
-                        <td className="pl-num">{idx + 1}</td>
+                        <td className="pl-num">{(safePage - 1) * rowsPerPage + idx + 1}</td>
                         <td className="pl-name">{p.name}</td>
                         <td>{p.instrument}</td>
                         <td>{p.method}</td>
@@ -399,6 +356,37 @@ const ProjectListPage: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+            {/* Pagination */}
+            {!loading && filtered.length > 0 && (
+              <div className="pl-pagination">
+                <div className="pl-rows-select">
+                  <span>Rows per page:</span>
+                  <select value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
+                    {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div className="pl-pagination-info">
+                  Showing {startRow}–{endRow} of {filtered.length} projects
+                </div>
+                <div className="pl-pagination-controls">
+                  <button className="pl-page-btn" onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+                  <button className="pl-page-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>‹</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(n => n === 1 || n === totalPages || Math.abs(n - safePage) <= 1)
+                    .reduce<(number | string)[]>((acc, n, i, arr) => {
+                      if (i > 0 && (n as number) - (arr[i - 1] as number) > 1) acc.push('…');
+                      acc.push(n);
+                      return acc;
+                    }, [])
+                    .map((n, i) => typeof n === 'string'
+                      ? <span key={`e${i}`} className="pl-page-btn" style={{ border: 'none', cursor: 'default' }}>{n}</span>
+                      : <button key={n} className={`pl-page-btn${safePage === n ? ' active' : ''}`} onClick={() => setCurrentPage(n)}>{n}</button>
+                    )}
+                  <button className="pl-page-btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>›</button>
+                  <button className="pl-page-btn" onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
+                </div>
               </div>
             )}
           </div>

@@ -8,8 +8,42 @@ interface Props {
   onSave: (data: Partial<Omit<Project, "id" | "created_at">>) => void;
 }
 
+type DropdownField = "instrument" | "method" | "status";
+type FormState = { name: string; instrument: string; bm_elevation: string; method: string; distance_k: string; status: 'active' | 'completed' | 'pending'; };
+
+const Dropdown: React.FC<{
+  field: DropdownField;
+  options: string[];
+  form: FormState;
+  openDropdown: string | null;
+  setOpenDropdown: (v: string | null) => void;
+  setForm: (v: FormState) => void;
+}> = ({ field, options, form, openDropdown, setOpenDropdown, setForm }) => (
+  <div className="custom-dropdown">
+    <div className="custom-dropdown-selected" onClick={() => setOpenDropdown(openDropdown === field ? null : field)}>
+      {form[field]}
+      <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+        <path d="M1 1L6 6L11 1" stroke="#9197B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+    {openDropdown === field && (
+      <div className="custom-dropdown-options">
+        {options.map((opt) => (
+          <div
+            key={opt}
+            className={`custom-dropdown-option ${form[field] === opt ? "selected" : ""}`}
+            onClick={() => { setForm({ ...form, [field]: opt }); setOpenDropdown(null); }}
+          >
+            {opt}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     name: project.name,
     instrument: project.instrument,
     bm_elevation: project.bm_elevation,
@@ -45,30 +79,6 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
       showToast("error", "Failed to update project. Please try again.");
     }
   };
-
-  const Dropdown = ({ field, options }: { field: "instrument" | "method" | "status"; options: string[] }) => (
-    <div className="custom-dropdown">
-      <div className="custom-dropdown-selected" onClick={() => setOpenDropdown(openDropdown === field ? null : field)}>
-        {form[field]}
-        <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-          <path d="M1 1L6 6L11 1" stroke="#9197B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-      {openDropdown === field && (
-        <div className="custom-dropdown-options">
-          {options.map((opt) => (
-            <div
-              key={opt}
-              className={`custom-dropdown-option ${form[field] === opt ? "selected" : ""}`}
-              onClick={() => { setForm({ ...form, [field]: opt }); setOpenDropdown(null); }}
-            >
-              {opt}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <>
@@ -106,7 +116,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
           </div>
           <div className="new-project-field">
             <label>Instrument</label>
-            <Dropdown field="instrument" options={["Auto Level", "Digital Level", "Laser Level"]} />
+            <Dropdown field="instrument" options={["Auto Level", "Digital Level", "Laser Level"]} form={form} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} setForm={setForm} />
           </div>
           <div className="new-project-field">
             <label>BM Elevation</label>
@@ -114,7 +124,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
           </div>
           <div className="new-project-field">
             <label>Method</label>
-            <Dropdown field="method" options={["Hi Method (Height of Instrument)", "Rise and Fall Method"]} />
+            <Dropdown field="method" options={["Hi Method (Height of Instrument)", "Rise and Fall Method"]} form={form} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} setForm={setForm} />
           </div>
           <div className="new-project-field">
             <label>Distance K</label>
@@ -122,7 +132,7 @@ const EditProjectModal: React.FC<Props> = ({ project, onClose, onSave }) => {
           </div>
           <div className="new-project-field">
             <label>Status</label>
-            <Dropdown field="status" options={["active", "pending", "completed"]} />
+            <Dropdown field="status" options={["active", "pending", "completed"]} form={form} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} setForm={setForm} />
           </div>
 
           <div className="new-project-actions">

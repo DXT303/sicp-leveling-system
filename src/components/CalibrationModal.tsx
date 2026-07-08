@@ -115,7 +115,7 @@ const CalibrationModal: React.FC<Props> = ({ projectId, projectName, onClose, on
       setIsDirty(false);
       setToast({ type: 'success', update: !!existingId });
       setTimeout(() => { setToast(null); onSaved(50); }, 1500);
-    } catch { setToast({ type: 'error', update: false }); setTimeout(() => setToast(null), 3000); }
+    } catch (_) { setToast({ type: 'error', update: false }); setTimeout(() => setToast(null), 3000); }
     finally { setSaving(false); }
   };
 
@@ -149,7 +149,7 @@ const CalibrationModal: React.FC<Props> = ({ projectId, projectName, onClose, on
               <span style={{ fontSize: 14, color: '#9197B3', fontFamily: 'Poppins' }}>Loading data...</span>
             </div>
           ) : (
-            <>
+            <React.Fragment>
               <div className="cal-grid">
                 {/* Instrument Setup */}
                 <div className="cal-card">
@@ -229,7 +229,7 @@ const CalibrationModal: React.FC<Props> = ({ projectId, projectName, onClose, on
                   {saving ? (existingId && isDirty ? 'Updating…' : 'Saving…') : (existingId && isDirty ? 'Update Calibration' : existingId ? '✓ Saved!' : 'Save Calibration')}
                 </button>
               </div>
-            </>
+            </React.Fragment>
           )}
         </div>
       </div>

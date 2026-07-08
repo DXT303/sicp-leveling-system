@@ -35,8 +35,6 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const isDuplicate = existingNames.some(
@@ -57,6 +55,8 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
       setTimeout(() => setToast(null), 3000);
     }
   };
+
+  if (!isOpen && !toast) return null;
 
   return (
     <>

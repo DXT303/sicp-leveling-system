@@ -126,7 +126,7 @@ const ComputationModal: React.FC<Props> = ({ projectId, projectName, onClose, on
               <span style={{ fontSize: 14, color: '#9197B3', fontFamily: 'Poppins' }}>Loading data...</span>
             </div>
           ) : (
-          <>
+          <React.Fragment>
           <div className="comp-table-card">
             <div className="comp-table-wrapper">
               <table className="comp-table">
@@ -181,7 +181,7 @@ const ComputationModal: React.FC<Props> = ({ projectId, projectName, onClose, on
               {(confirmed || alreadyConfirmed) ? '✓ Confirmed!' : 'Confirm Computation →'}
             </button>
           </div>
-          </>
+          </React.Fragment>
           )}
         </div>
       </div>

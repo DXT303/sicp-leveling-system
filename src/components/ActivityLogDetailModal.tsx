@@ -10,7 +10,7 @@ const ActivityLogDetailModal: React.FC<Props> = ({ log, onClose }) => {
   let changes: Record<string, { from: unknown; to: unknown }> | null = null;
   try {
     if (log.details) changes = JSON.parse(log.details);
-  } catch {}
+  } catch (_) {}
 
   return (
     <div className="new-project-overlay" onClick={onClose}>
