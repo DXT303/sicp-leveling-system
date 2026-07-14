@@ -17,20 +17,32 @@ A software-based approach for error detection and correction in surveying instru
 - Activity logs with inline search and "View All" button
 - Quick access buttons: New Project, Import Data, Calibrate, Export Data, Export Template
 - Skeletal loading states for better UX
+- Delete success modal when removing projects from active list
 
 ### 📝 Project Management
 - Create projects with instrument details, BM elevation, method, and distance
+- Duplicate submission prevention (button disabled while saving)
 - Import projects from CSV template (auto-create project + observations)
 - Export CSV template with project info fields
 - View, edit, and delete projects
 - Project detail modal with full information and step-by-step workflow
 - Delete confirmation modal with project name
+- Activity log on project deletion (includes project name and user)
 - Automatic progress calculation based on milestones:
   - 0% - New project
   - 25% - Data input completed
   - 50% - Calibration completed
   - 75% - Computation confirmed
   - 100% - Report marked as complete
+
+### 🗑️ Recycle Bin
+- Soft-delete: deleted projects are moved to recycle bin instead of permanently removed
+- Accessible from Settings → Data → Recycle Bin
+- Restore projects back to the active project list
+- Permanently delete projects from the recycle bin (with confirmation)
+- Activity log on restore (includes project name and user)
+- Success modal on restore
+- Project list and dashboard update instantly after restore (no reload required)
 
 ### 📋 Data Input
 - Manual leveling observations entry (Station, BS, IS, FS)
@@ -73,7 +85,7 @@ A software-based approach for error detection and correction in surveying instru
 - Automatic progress update to 100% after export
 
 ### 📋 Activity Logs
-- Logs all key actions: project creation/deletion, calibration save/update, computation confirmation, mark as complete
+- Logs all key actions: project creation/deletion/restore, calibration save/update, computation confirmation, mark as complete
 - All log messages include project name and the user who performed the action
 - Inline search on dashboard (by message or category)
 - "View All" button opens full Activity Logs Modal with:
@@ -91,6 +103,8 @@ A software-based approach for error detection and correction in surveying instru
 - Scrollable containers for Active Projects and Activity Logs (max-height: 500px)
 - Confirmation modals for destructive actions (Delete, Logout, Mark Complete)
 - Toast notifications for success messages
+- Success modals for delete and restore actions
+- Duplicate submission prevention on project creation
 
 ## Tech Stack
 
@@ -102,6 +116,7 @@ A software-based approach for error detection and correction in surveying instru
 - **Authentication**: Session-based with bcrypt password hashing
 - **Rate Limiting**: Express rate limiter for login attempts
 - **PDF Export**: jsPDF + jsPDF-AutoTable (loaded via CDN)
+- **Deployment**: Vercel (serverless, file-based API routing)
 
 ## Installation
 
@@ -113,10 +128,13 @@ npm install
 cp .env.example .env
 # Then edit .env and fill in your Turso database credentials
 
-# 3. Run development server
+# 3. Run migrations
+npm run migrate
+
+# 4. Run development server
 npm run dev
 
-# 4. Build for production
+# 5. Build for production
 npm run build
 ```
 
@@ -127,14 +145,30 @@ Create a `.env` file from `.env.example` and fill in:
 | Variable | Description |
 |---|---|
 | `TURSO_URL` | Your Turso database URL (e.g. `libsql://your-db.turso.io`) |
+| `TURSO_DATABASE_URL` | Same as TURSO_URL (alias used by some modules) |
 | `TURSO_AUTH_TOKEN` | Your Turso auth token from the Turso dashboard |
 
 Get your credentials at [https://turso.tech](https://turso.tech) → your database → **Generate Token**.
 
+> For Vercel deployment, add these as Environment Variables in the Vercel dashboard under **Settings → Environment Variables**, then redeploy.
+
 ## Project Structure
 
 ```
-cms-login/
+sicp-leveling-system/
+├── api/
+│   ├── auth/
+│   │   ├── login.js
+│   │   └── register.js
+│   ├── logs/
+│   │   └── index.js
+│   ├── projects/
+│   │   ├── index.js
+│   │   ├── [id].js
+│   │   ├── trash.js
+│   │   └── [id]/
+│   │       └── restore.js
+│   └── _db.js
 ├── src/
 │   ├── components/
 │   │   ├── LoginPage.tsx
@@ -158,8 +192,10 @@ cms-login/
 │   │   ├── DataInputModal.tsx
 │   │   ├── ComputationModal.tsx
 │   │   ├── CalibrationModal.tsx
+│   │   ├── RecycleBinModal.tsx
 │   │   ├── ActivityLogDetailModal.tsx
 │   │   ├── ActivityLogsModal.tsx
+│   │   ├── SettingsModal.tsx
 │   │   ├── useProjects.ts
 │   │   ├── useActivityLogs.ts
 │   │   └── [CSS files]
@@ -173,11 +209,15 @@ cms-login/
 │   │       ├── 003_activity_logs_add_details.js
 │   │       ├── 004_leveling_rows_index.js
 │   │       ├── 005_calibrations_add_method.js
-│   │       └── 006_calibrations_add_distance.js
+│   │       ├── 006_calibrations_add_distance.js
+│   │       └── 007_projects_soft_delete.js
 │   ├── index.tsx
 │   └── index.css
+├── scripts/
+│   └── migrate.js
 ├── public/
 ├── server.js
+├── vercel.json
 ├── package.json
 └── .env
 ```
@@ -222,18 +262,24 @@ cms-login/
 3. **Computation** (Progress: 75%) — Calculate HI, Rise, Fall, RL, and confirm closure error
 4. **Report / Complete** (Progress: 100%) — Review survey report and mark as complete
 
-### 4. Reports
+### 4. Recycle Bin
+- Deleted projects are moved to the Recycle Bin (not permanently removed)
+- Access via Settings (user avatar) → Recycle Bin
+- Click **Restore** to bring a project back to the active list
+- Click **Delete** to permanently remove a project (requires confirmation)
+
+### 5. Reports
 - View all project reports and calibration records
 - Filter by type (All, Leveling, Calibration)
 - Mark as Complete button only visible when computation is confirmed (progress ≥ 75%)
 - View project details and edit information
 
-### 5. Export Data
+### 6. Export Data
 - Select project and format (CSV, TXT, PDF, Excel)
 - Data is exported with all observations and totals row
 - Project progress automatically updates to 100%
 
-### 6. Activity Logs
+### 7. Activity Logs
 - All key actions are automatically logged with project name and user
 - Use the inline search on the dashboard to filter recent logs
 - Click "View All" to open the full logs modal with date range filtering
@@ -242,22 +288,30 @@ cms-login/
 
 ### Tables
 - **users** - User accounts (id, name, email, password, created_at)
-- **projects** - Survey projects (id, name, instrument, bm_elevation, method, distance_k, status, progress, created_at)
+- **projects** - Survey projects (id, name, instrument, bm_elevation, method, distance_k, status, progress, created_at, deleted_at)
 - **leveling_rows** - Observation data (id, project_id, station, bs, is_val, fs, hi, rise, fall, rl, remarks, row_order)
 - **calibrations** - Calibration records (id, project_id, instrument, date, d1_near, d1_far, d2_near, d2_far, error, status, method, distance, created_at)
 - **activity_logs** - System activity logs (id, type, message, sub, details, created_at)
+
+> `deleted_at` on `projects` enables soft-delete / recycle bin functionality. Projects with a non-null `deleted_at` are hidden from all normal queries and shown only in the Recycle Bin.
 
 ## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login user (rate limited: 20 attempts per 15 minutes)
+- `PATCH /api/auth/update` - Update user name or password
 
 ### Projects
-- `GET /api/projects` - Get all projects
+- `GET /api/projects` - Get all active projects (excludes soft-deleted)
 - `POST /api/projects` - Create new project
 - `PATCH /api/projects/:id` - Update project
-- `DELETE /api/projects/:id` - Delete project
+- `DELETE /api/projects/:id` - Soft-delete project (moves to recycle bin)
+
+### Recycle Bin
+- `GET /api/projects/trash` - Get all soft-deleted projects
+- `DELETE /api/projects/trash` - Permanently delete a project (body: `{ id }`)
+- `POST /api/projects/:id/restore` - Restore a project from the recycle bin
 
 ### Observations
 - `GET /api/projects/:id/rows` - Get project observations
@@ -281,4 +335,4 @@ cms-login/
 
 ## License
 
-© 2026 Survey Leveling System V1.3
+© 2026 Survey Leveling System V1.4

@@ -16,6 +16,7 @@ const FEATURES = [
   { f: 'Closure Error Check',   d: 'Real-time misclose detection against 12mm√K tolerance' },
   { f: 'Two-Peg Calibration',   d: 'Automated collimation error calculation with ±3mm pass/fail' },
   { f: 'Progress Tracking',     d: 'Milestone-based progress (0% → 25% → 50% → 75% → 100%)' },
+  { f: 'Recycle Bin',           d: 'Soft-delete with restore and permanent delete — no accidental data loss' },
   { f: 'Reports',               d: 'Unified view of leveling and calibration records' },
   { f: 'Data Export',           d: 'CSV, TXT, PDF, and Excel export formats' },
   { f: 'Activity Logs',         d: 'Full audit trail of all system actions with search and date filter' },
@@ -28,11 +29,21 @@ const WORKFLOW = [
   { step: '04', title: 'Report',       desc: 'Review, export to CSV / TXT / PDF / Excel, and mark the survey as complete.',      progress: '100%' },
 ];
 
-const PATCHES = [
+const PATCHES_V13 = [
   { id: '1', component: 'NewProjectModal', fix: 'Modal stuck on success overlay — toast state kept component alive after onClose. Fixed by clearing toast and closing together.' },
   { id: '2', component: 'ProjectListPage', fix: 'handleNewProjectSave was synchronous — modal resolved instantly without waiting for the API. Made async with await.' },
   { id: '3', component: 'useProjects', fix: 'addProject silently ignored API errors. Added res.ok check to throw and surface failures to the modal catch block.' },
   { id: '4', component: 'SettingsModal', fix: 'Current Password field had a show/hide eye toggle that could expose the typed password. Removed toggle and locked field to type="password" permanently.' },
+];
+
+const PATCHES_V14 = [
+  { id: '1', component: 'vercel.json', fix: 'PATCH/DELETE on /api/projects/:id returned 405 — catch-all rewrite intercepted API routes. Fixed with negative lookahead rewrite /((?!api/).*) → /index.html.' },
+  { id: '2', component: 'api/_db.js', fix: 'Migrations ran at runtime on every cold start. Moved to build time via vercel.json buildCommand.' },
+  { id: '3', component: 'api/projects/[id]/restore.js', fix: 'Restore via PATCH returned 405 on Vercel dynamic routes. Created dedicated POST /api/projects/:id/restore endpoint.' },
+  { id: '4', component: 'RecycleBinModal / DashboardPage', fix: 'Project list and logs did not update after restore without a page reload. Wired onProjectRestored callback through Sidebar → SettingsModal → RecycleBinModal to call refetch() + fetchLogs().' },
+  { id: '5', component: 'RecycleBinModal.css / NewProjectModal.css', fix: 'Success modal rendered behind Recycle Bin overlay. Fixed z-index: ep-notif-overlay → 99999, rb-overlay → 9000.' },
+  { id: '6', component: 'NewProjectModal', fix: 'Double-clicking create submitted multiple requests. Added saving state — button disabled and shows "Creating…" while request is in flight.' },
+  { id: '7', component: 'ProjectListPage', fix: 'Delete action did not log the project name — state was cleared before postLog was called. Added deleteTargetName state to capture name before clearing.' },
 ];
 
 const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
@@ -116,11 +127,27 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             </div>
           </section>
 
-          {/* Patch Notes */}
+          {/* Patch Notes v1.3 */}
           <section className="about-section">
             <h3 className="about-section-title">🔧 Patch Notes — v1.3</h3>
             <div className="about-patches">
-              {PATCHES.map(({ id, component, fix }) => (
+              {PATCHES_V13.map(({ id, component, fix }) => (
+                <div className="about-patch-item" key={id}>
+                  <span className="about-patch-id">#{id}</span>
+                  <div className="about-patch-info">
+                    <span className="about-patch-component">{component}</span>
+                    <span className="about-patch-fix">{fix}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Patch Notes v1.4 */}
+          <section className="about-section">
+            <h3 className="about-section-title">🚀 What's New — v1.4</h3>
+            <div className="about-patches">
+              {PATCHES_V14.map(({ id, component, fix }) => (
                 <div className="about-patch-item" key={id}>
                   <span className="about-patch-id">#{id}</span>
                   <div className="about-patch-info">
@@ -137,7 +164,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <h3 className="about-section-title">🛠️ Development Background</h3>
             <div className="about-meta-grid">
               <div className="about-meta-item"><span className="about-meta-label">Project Type</span><span className="about-meta-value">Undergraduate Thesis / Capstone Project</span></div>
-              <div className="about-meta-item"><span className="about-meta-label">Version</span><span className="about-meta-value">1.3</span></div>
+              <div className="about-meta-item"><span className="about-meta-label">Version</span><span className="about-meta-value">1.4</span></div>
               <div className="about-meta-item"><span className="about-meta-label">Development Period</span><span className="about-meta-value">2025 – 2026</span></div>
               <div className="about-meta-item"><span className="about-meta-label">Platform</span><span className="about-meta-value">Web — React 18 + TypeScript + Vite</span></div>
               <div className="about-meta-item"><span className="about-meta-label">Backend</span><span className="about-meta-value">Express.js + Node.js</span></div>

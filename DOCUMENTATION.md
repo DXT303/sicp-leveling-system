@@ -1,5 +1,5 @@
 # Survey Leveling System — Technical Documentation
-### Version 1.3 | Thesis Defense Reference
+### Version 1.4 | Thesis Defense Reference
 ### Last Updated: 2026
 
 ---
@@ -65,6 +65,7 @@ It is not intended for other surveying methods such as traversing, triangulation
 | Closure Error Check | Real-time misclose detection against 12mm√K tolerance |
 | Two-Peg Calibration | Automated collimation error calculation with ±3mm pass/fail |
 | Progress Tracking | Milestone-based progress (0% → 25% → 50% → 75% → 100%) |
+| Recycle Bin | Soft-delete with restore and permanent delete |
 | Reports | Unified view of leveling and calibration records |
 | Data Export | CSV, TXT, PDF, and Excel export formats |
 | Activity Logs | Full audit trail of all system actions with search and date filter |
@@ -76,7 +77,7 @@ This system was developed in response to the need for a low-cost, accessible dig
 ### 2.6 Development Background
 
 - **Project Type:** Undergraduate Thesis / Capstone Project
-- **Version:** 1.3
+- **Version:** 1.4
 - **Development Period:** 2025 – 2026
 - **Platform:** Web (Browser-based, responsive for desktop and mobile)
 - **Hosting:** Vercel (serverless deployment)
@@ -92,6 +93,7 @@ This system was developed in response to the need for a low-cost, accessible dig
 | Paper-based progress tracking | Milestone progress bar (0–100%) per project |
 | Difficult report generation | One-click export to CSV, TXT, PDF, or Excel |
 | No audit trail | Automatic activity log for every key action |
+| Accidental permanent deletion | Soft-delete with Recycle Bin — restore or permanently delete |
 
 ---
 
@@ -141,6 +143,19 @@ This system was developed in response to the need for a low-cost, accessible dig
 
 ```
 sicp-leveling-system/
+├── api/
+│   ├── auth/
+│   │   ├── login.js
+│   │   └── register.js
+│   ├── logs/
+│   │   └── index.js
+│   ├── projects/
+│   │   ├── index.js             # GET (active only) + POST
+│   │   ├── [id].js              # PATCH + DELETE (soft)
+│   │   ├── trash.js             # GET + DELETE (permanent)
+│   │   └── [id]/
+│   │       └── restore.js       # POST — restore from recycle bin
+│   └── _db.js                   # Turso client
 ├── src/
 │   ├── components/          # All React UI components and CSS
 │   │   ├── DashboardPage.tsx
@@ -150,16 +165,18 @@ sicp-leveling-system/
 │   │   ├── ReportsPage.tsx
 │   │   ├── ProjectListPage.tsx
 │   │   ├── Sidebar.tsx
-│   │   ├── [Modal components]
+│   │   ├── RecycleBinModal.tsx
+│   │   ├── [Other modal components]
 │   │   ├── useProjects.ts       # Custom hook for project data
-│   │   ├── useActivityLogs.ts   # Custom hook for logs
-│   │   └── useProjectProgress.ts
+│   │   └── useActivityLogs.ts   # Custom hook for logs
 │   ├── db/
 │   │   ├── client.js            # Turso DB connection
 │   │   ├── migrate.js           # Migration runner
-│   │   └── migrations/          # Versioned schema migrations
+│   │   └── migrations/          # Versioned schema migrations (001–007)
 │   └── index.tsx                # App entry point
-├── server.js                    # Express API server
+├── scripts/
+│   └── migrate.js               # Build-time migration runner
+├── server.js                    # Express API server (local dev)
 ├── vite.config.ts
 └── vercel.json                  # Deployment config
 ```
@@ -199,6 +216,7 @@ activity_logs (standalone, references project by name in message)
 | status | TEXT | Project status (active/complete) |
 | progress | INTEGER | Progress percentage (0/25/50/75/100) |
 | created_at | DATETIME | Creation timestamp |
+| deleted_at | TEXT | Soft-delete timestamp (NULL = active, non-NULL = in recycle bin) |
 
 #### `leveling_rows`
 | Column | Type | Description |
@@ -273,6 +291,8 @@ activity_logs (standalone, references project by name in message)
 **Create Project** (`POST /api/projects`)
 
 Fields: name, instrument, BM elevation, computation method, distance K
+
+Duplicate submission is prevented by disabling the submit button and showing "Creating…" while the request is in flight (`saving` state in `NewProjectModal.tsx`).
 
 **Progress Milestone System**
 
@@ -438,7 +458,35 @@ Status:
 
 ---
 
-### 5.6 Reports Module
+### 5.6 Recycle Bin Module
+
+**Component:** `RecycleBinModal.tsx`  
+**Accessible via:** Settings (user avatar) → Data → Recycle Bin
+
+Projects are never permanently deleted by the standard delete action. Instead, `deleted_at` is set to the current timestamp (soft-delete). The Recycle Bin shows all projects where `deleted_at IS NOT NULL`.
+
+**Restore:**
+- Calls `POST /api/projects/:id/restore` — sets `deleted_at = NULL`
+- Logs action to `activity_logs` ("Project [name] restored by [user]")
+- Triggers `onRestored` callback → `refetch()` + `fetchLogs()` in the parent page so the project list and dashboard update instantly without a page reload
+- Shows a success modal on completion
+
+**Permanent Delete:**
+- Calls `DELETE /api/projects/trash` with `{ id }` in the request body
+- Requires confirmation modal before executing
+- Removes the project and all related `leveling_rows` from the database
+
+**Z-index Layering:**
+
+| Layer | Value |
+|---|---|
+| `rb-overlay` (Recycle Bin modal) | 9000 |
+| `settings-overlay` (Settings modal) | 9999 |
+| `ep-notif-overlay` (Success modal) | 99999 |
+
+---
+
+### 5.7 Reports Module
 
 **Component:** `ReportsPage.tsx`
 
@@ -460,7 +508,7 @@ Displays a unified view of all leveling projects and calibration records.
 
 ---
 
-### 5.7 Export Module
+### 5.8 Export Module
 
 **Component:** `ExportDataModal.tsx`
 
@@ -477,7 +525,7 @@ After any export, project progress is automatically updated to 100%.
 
 ---
 
-### 5.8 Activity Logs Module
+### 5.9 Activity Logs Module
 
 **Component:** `ActivityLogsModal.tsx`, `useActivityLogs.ts`
 
@@ -487,6 +535,7 @@ All key system actions are automatically logged:
 |---|---|---|
 | Project created | `project` | "Project [name] created by [user]" |
 | Project deleted | `project` | "Project [name] deleted by [user]" |
+| Project restored | `project` | "Project [name] restored by [user]" |
 | Calibration saved | `calibration` | "Calibration saved for [project] by [user]" |
 | Calibration updated | `calibration` | "Calibration updated for [project] by [user]" |
 | Computation confirmed | `computation` | "Computation confirmed for [project] — Misclose: Xmm, Status: PASS/FAIL" |
@@ -510,10 +559,17 @@ All key system actions are automatically logged:
 ### Projects
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/projects` | Get all projects |
+| GET | `/api/projects` | Get all active projects (excludes soft-deleted) |
 | POST | `/api/projects` | Create new project |
 | PATCH | `/api/projects/:id` | Update project fields |
-| DELETE | `/api/projects/:id` | Delete project |
+| DELETE | `/api/projects/:id` | Soft-delete project (sets `deleted_at`) |
+
+### Recycle Bin
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/projects/trash` | Get all soft-deleted projects |
+| DELETE | `/api/projects/trash` | Permanently delete a project (body: `{ id }`) |
+| POST | `/api/projects/:id/restore` | Restore a project (sets `deleted_at = NULL`) |
 
 ### Observations
 | Method | Endpoint | Description |
@@ -531,6 +587,11 @@ All key system actions are automatically logged:
 | POST | `/api/calibrations` | Create calibration record |
 | PATCH | `/api/calibrations/:id` | Update calibration record |
 | DELETE | `/api/calibrations/:id` | Delete calibration record |
+
+### Auth (additional)
+| Method | Endpoint | Description |
+|---|---|---|
+| PATCH | `/api/auth/update` | Update user name or password |
 
 ### Stats & Logs
 | Method | Endpoint | Description |
@@ -643,11 +704,24 @@ npm run dev
 | Variable | Description |
 |---|---|
 | `TURSO_URL` | Turso database URL (e.g. `libsql://your-db.turso.io`) |
+| `TURSO_DATABASE_URL` | Same as `TURSO_URL` (alias used by some modules) |
 | `TURSO_AUTH_TOKEN` | Auth token from Turso dashboard |
+
+For Vercel deployment, add these under **Settings → Environment Variables** in the Vercel dashboard, then redeploy.
 
 ### Production Deployment (Vercel)
 
-The project includes `vercel.json` for zero-config deployment. The Express server is exported as a Vercel serverless function via `export default app` in `server.js`.
+The project uses file-based API routing under `api/`. Each file in `api/` is a Vercel serverless function. The `vercel.json` rewrite uses a negative lookahead to avoid intercepting API routes:
+
+```json
+{
+  "buildCommand": "vite build && node scripts/migrate.js",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+}
+```
+
+Migrations run at build time via `scripts/migrate.js` — not at runtime — to avoid cold start delays.
 
 ---
 
@@ -702,4 +776,29 @@ The project includes `vercel.json` for zero-config deployment. The Express serve
 
 ---
 
-*Survey Leveling System V1.3 — © 2026*
+### v1.4 — Feature Update & Bug Fixes
+
+**New Features**
+
+| # | Feature | Description |
+|---|---|---|
+| 1 | Recycle Bin | Soft-delete via `deleted_at` column (migration 007). Deleted projects move to Recycle Bin instead of being permanently removed. Accessible from Settings → Data → Recycle Bin. |
+| 2 | Restore Project | `POST /api/projects/:id/restore` sets `deleted_at = NULL`. Project list and dashboard update instantly via `refetch()` + `fetchLogs()` callbacks without page reload. |
+| 3 | Permanent Delete | `DELETE /api/projects/trash` with `{ id }` body permanently removes project and all related rows after confirmation. |
+| 4 | Duplicate Submission Prevention | `NewProjectModal.tsx` uses `saving` state — submit button is disabled and shows "Creating…" while the API request is in flight. |
+| 5 | Delete Activity Logging | `ProjectListPage.tsx` captures `deleteTargetName` before clearing state, then calls `postLog` after successful delete so the activity log always includes the correct project name. |
+| 6 | Restore Activity Logging | `RecycleBinModal.tsx` calls `postLog` after restore and fires `onRestored` callback to refresh dashboard logs. |
+
+**Bug Fixes**
+
+| # | Component | Issue | Fix |
+|---|---|---|---|
+| 1 | `vercel.json` | PATCH/DELETE on `/api/projects/:id` returned 405 — the catch-all rewrite `/:path*` was intercepting API routes before they reached the serverless functions | Changed rewrite source to `/((?!api/).*)` (negative lookahead) so API routes are never matched by the rewrite |
+| 2 | `api/_db.js` | Migrations ran at runtime on every cold start, causing delays and potential race conditions | Moved migrations to build time via `vercel.json` `buildCommand: "vite build && node scripts/migrate.js"` |
+| 3 | `api/projects/[id]/restore.js` | Restore via `PATCH` with `restore: true` flag returned 405 on Vercel for dynamic routes | Created dedicated `POST /api/projects/:id/restore` endpoint — POST on dedicated files is reliable on Vercel |
+| 4 | `RecycleBinModal.tsx` / `DashboardPage.tsx` | Project list and activity logs did not update after restore without a page reload — `useProjects` instances are not shared between components | Added `refetch` to `useProjects`; wired `onProjectRestored` callback through `Sidebar` → `SettingsModal` → `RecycleBinModal`; `onRestored` fires `refetch()` + `fetchLogs()` in the owning page |
+| 5 | `RecycleBinModal.css` / `NewProjectModal.css` | Success modal (z-index 2000) rendered behind the Recycle Bin overlay (z-index 10000) | Set `ep-notif-overlay` to z-index 99999 and `rb-overlay` to z-index 9000 |
+
+---
+
+*Survey Leveling System V1.4 — © 2026*
