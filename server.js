@@ -137,7 +137,10 @@ app.patch('/api/projects/:id', async (req, res) => {
 
 app.delete('/api/projects/:id', async (req, res) => {
   try {
-    await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [req.params.id] });
+    const id = req.params.id;
+    await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [id] });
+    await db.execute({ sql: 'DELETE FROM calibrations WHERE project_id = ?', args: [id] });
+    await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [id] });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

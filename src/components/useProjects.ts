@@ -37,7 +37,8 @@ export function useProjects() {
   };
 
   const deleteProject = async (id: number) => {
-    await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(await res.text());
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
