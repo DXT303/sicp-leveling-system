@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
         <div className="auth-form-wrapper">
           <form className="auth-form-group" onSubmit={handleSubmit} noValidate>
 
-            <h1 className="auth-title">Welcome back</h1>
+            <h1 className="auth-title">Welcome back!</h1>
             <p className="auth-subtitle">Sign in to access the system.</p>
 
             <div className="auth-field">
