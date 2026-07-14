@@ -27,7 +27,7 @@ const DashboardPage: React.FC = () => {
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [logsSearchQuery, setLogsSearchQuery] = useState('');
-  const { projects, loading, addProject, deleteProject } = useProjects();
+  const { projects, loading, addProject, deleteProject, refetch } = useProjects();
   const { logs, fetchLogs } = useActivityLogs();
   const [dashStats, setDashStats] = useState<{ calibrationTotal: number; calibrationPending: number; lastClosureMm: number | null } | null>(null);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
@@ -134,7 +134,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="db-page">
 
-      <Sidebar activePath="/dashboard" onLogout={() => setShowLogoutModal(true)} />
+      <Sidebar activePath="/dashboard" onLogout={() => setShowLogoutModal(true)} onProjectRestored={() => { refetch(); fetchLogs(); }} />
 
       {/* Main */}
       <main className="db-main">

@@ -16,13 +16,14 @@ const statusColor: Record<string, string> = {
 };
 
 const ProjectListPage: React.FC = () => {
-  const { projects, loading, addProject, deleteProject, updateProject } = useProjects();
+  const { projects, loading, addProject, deleteProject, updateProject, refetch } = useProjects();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteTargetName, setDeleteTargetName] = useState<string>('');
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'pending'>('all');
@@ -91,9 +92,13 @@ const ProjectListPage: React.FC = () => {
   const handleConfirmDelete = async () => {
     if (deleteTargetId === null) return;
     const id = deleteTargetId;
+    const name = deleteTargetName;
+    const userName = sessionStorage.getItem('userName') || 'User';
     setDeleteTargetId(null);
+    setDeleteTargetName('');
     try {
       await deleteProject(id);
+      await postLog('warning', `Project "${name}" deleted by ${userName}`, 'Warning / Deleted');
       setShowDeleteSuccess(true);
       setTimeout(() => setShowDeleteSuccess(false), 2000);
     } catch {
@@ -180,6 +185,7 @@ const ProjectListPage: React.FC = () => {
       <Sidebar
         activePath="/projects"
         onLogout={() => setShowLogoutModal(true)}
+        onProjectRestored={refetch}
       />
 
       {/* Main */}
@@ -350,7 +356,7 @@ const ProjectListPage: React.FC = () => {
                         <td>
                           <button
                             className="pl-btn-delete"
-                            onClick={(e) => { e.stopPropagation(); setDeleteTargetId(p.id); }}
+                            onClick={(e) => { e.stopPropagation(); setDeleteTargetId(p.id); setDeleteTargetName(p.name); }}
                             title="Delete"
                           >
                             ×

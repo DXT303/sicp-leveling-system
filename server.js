@@ -161,7 +161,7 @@ app.delete('/api/projects/:id', async (req, res) => {
 
 app.post('/api/projects/:id/restore', async (req, res) => {
   try {
-    await db.execute({ sql: `UPDATE projects SET deleted_at = NULL WHERE id = ?`, args: [req.params.id] });
+    await db.execute({ sql: 'UPDATE projects SET deleted_at = NULL WHERE id = ?', args: [req.params.id] });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

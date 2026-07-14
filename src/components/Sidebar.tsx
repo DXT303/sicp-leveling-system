@@ -53,9 +53,10 @@ const PAGE_TITLES: Record<string, string> = {
 interface SidebarProps {
   activePath: string;
   onLogout: () => void;
+  onProjectRestored?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout, onProjectRestored }) => {
   const [pinned, setPinned] = useState(() => localStorage.getItem('sb_pinned') !== 'false');
   const [hovered, setHovered] = useState(() => sessionStorage.getItem('sb_was_expanded') === 'true');
   const [showAbout, setShowAbout] = useState(false);
@@ -187,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePath, onLogout }) => {
         </div>
       </div>
       <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} onProjectRestored={onProjectRestored} />
     </aside>
   );
 };

@@ -19,6 +19,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [saving, setSaving] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const methodRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +38,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     const isDuplicate = existingNames.some(
       (n) => n.toLowerCase() === formData.projectName.trim().toLowerCase()
     );
@@ -45,6 +47,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
       setTimeout(() => setToast(null), 3000);
       return;
     }
+    setSaving(true);
     try {
       await onSave(formData);
       setFormData({ projectName: '', instrument: 'Auto Level', bmElevation: '', method: 'Hi Method (Height of Instrument)', distanceK: '' });
@@ -53,6 +56,8 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
     } catch {
       setToast({ type: 'error', msg: 'Failed to create project. Please try again.' });
       setTimeout(() => setToast(null), 3000);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -187,8 +192,8 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onSa
             <button type="button" className="new-project-btn-cancel" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="new-project-btn-create">
-              Create Project
+            <button type="submit" className="new-project-btn-create" disabled={saving}>
+              {saving ? 'Creating…' : 'Create Project'}
             </button>
           </div>
         </form>

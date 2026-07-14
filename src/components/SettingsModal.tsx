@@ -169,7 +169,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onProjec
             isOpen={showRecycleBin}
             onClose={() => setShowRecycleBin(false)}
             fetchTrash={fetchTrash}
-            onRestore={async (id) => { await restoreProject(id); onProjectRestored?.(); }}
+            onRestore={async (id) => { await restoreProject(id); }}
+            onRestored={() => onProjectRestored?.()}
             onPermanentDelete={permanentDelete}
           />
         )}

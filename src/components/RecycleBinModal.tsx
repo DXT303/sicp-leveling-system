@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './RecycleBinModal.css';
+import './NewProjectModal.css';
 import { Project } from './useProjects';
 import { postLog } from './useActivityLogs';
 
@@ -8,13 +10,15 @@ interface Props {
   onClose: () => void;
   fetchTrash: () => Promise<Project[]>;
   onRestore: (id: number) => Promise<void>;
+  onRestored?: () => void;
   onPermanentDelete: (id: number) => Promise<void>;
 }
 
-const RecycleBinModal: React.FC<Props> = ({ isOpen, onClose, fetchTrash, onRestore, onPermanentDelete }) => {
+const RecycleBinModal: React.FC<Props> = ({ isOpen, onClose, fetchTrash, onRestore, onRestored, onPermanentDelete }) => {
   const [items, setItems] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -30,6 +34,9 @@ const RecycleBinModal: React.FC<Props> = ({ isOpen, onClose, fetchTrash, onResto
     setItems(prev => prev.filter(p => p.id !== id));
     const userName = sessionStorage.getItem('userName') || 'User';
     await postLog('success', `Project "${project?.name}" restored by ${userName}`, 'Success / Project restored');
+    onRestored?.();
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
   };
 
   const handlePermanentDelete = async (id: number) => {
@@ -39,7 +46,23 @@ const RecycleBinModal: React.FC<Props> = ({ isOpen, onClose, fetchTrash, onResto
   };
 
   return (
-    <div className="rb-overlay" onClick={onClose}>
+    <>
+      {showSuccess && createPortal(
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            <div className="ep-notif-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle className="ep-notif-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="ep-notif-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+            </div>
+            <h2 className="ep-notif-title--success">Restored!</h2>
+            <p className="ep-notif-message">Project has been restored successfully.</p>
+          </div>
+        </div>,
+        document.body
+      )}
+      <div className="rb-overlay" onClick={onClose}>
       <div className="rb-modal" onClick={e => e.stopPropagation()}>
         <div className="rb-header">
           <span className="rb-icon">🗑️</span>
@@ -79,7 +102,8 @@ const RecycleBinModal: React.FC<Props> = ({ isOpen, onClose, fetchTrash, onResto
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

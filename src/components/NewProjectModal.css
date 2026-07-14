@@ -200,6 +200,11 @@
   border-color: #e07820;
 }
 
+.new-project-btn-create:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -219,7 +224,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 99999;
   animation: fadeIn 0.2s ease;
 }
 

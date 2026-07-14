@@ -44,12 +44,13 @@ export function useProjects() {
   };
 
   const restoreProject = async (id: number) => {
-    const res = await fetch(`/api/projects/${id}`, {
-      method: 'PATCH',
+    const res = await fetch(`/api/projects/${id}/restore`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ restore: true }),
     });
     if (!res.ok) throw new Error(await res.text());
+    const restored = await fetch('/api/projects').then(r => r.json());
+    setProjects(restored);
   };
 
   const permanentDelete = async (id: number) => {
@@ -76,5 +77,11 @@ export function useProjects() {
     setProjects(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
   };
 
-  return { projects, loading, addProject, deleteProject, restoreProject, permanentDelete, fetchTrash, updateProject };
+  const refetch = () =>
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then(setProjects)
+      .catch(console.error);
+
+  return { projects, loading, addProject, deleteProject, restoreProject, permanentDelete, fetchTrash, updateProject, refetch };
 }
