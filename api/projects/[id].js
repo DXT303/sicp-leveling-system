@@ -6,6 +6,10 @@ export default async function handler(req, res) {
 
   if (req.method === 'PATCH') {
     try {
+      if (req.body.restore) {
+        await db.execute({ sql: 'UPDATE projects SET deleted_at = NULL WHERE id = ?', args: [id] });
+        return res.json({ success: true });
+      }
       const { name, instrument, bm_elevation, method, distance_k, status, progress } = req.body;
       await db.execute({
         sql: `UPDATE projects SET
@@ -26,13 +30,6 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     try {
       await db.execute({ sql: `UPDATE projects SET deleted_at = datetime('now') WHERE id = ?`, args: [id] });
-      return res.json({ success: true });
-    } catch (err) { return res.status(500).json({ success: false, message: err.message }); }
-  }
-
-  if (req.method === 'POST' && req.query.action === 'restore') {
-    try {
-      await db.execute({ sql: `UPDATE projects SET deleted_at = NULL WHERE id = ?`, args: [id] });
       return res.json({ success: true });
     } catch (err) { return res.status(500).json({ success: false, message: err.message }); }
   }
