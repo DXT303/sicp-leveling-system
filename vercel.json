@@ -1,7 +1,7 @@
 {
-  "buildCommand": "vite build",
+  "buildCommand": "vite build && node scripts/migrate.js",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/:path*", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
