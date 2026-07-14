@@ -10,6 +10,7 @@ export interface Project {
   progress: number;
   status: 'active' | 'completed' | 'pending';
   created_at: string;
+  deleted_at?: string | null;
 }
 
 export function useProjects() {
@@ -42,6 +43,26 @@ export function useProjects() {
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
+  const restoreProject = async (id: number) => {
+    const res = await fetch(`/api/projects/${id}?action=restore`, { method: 'POST' });
+    if (!res.ok) throw new Error(await res.text());
+  };
+
+  const permanentDelete = async (id: number) => {
+    const res = await fetch('/api/projects/trash', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+  };
+
+  const fetchTrash = async (): Promise<Project[]> => {
+    const res = await fetch('/api/projects/trash');
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  };
+
   const updateProject = async (id: number, data: Partial<Omit<Project, 'id' | 'created_at'>>) => {
     await fetch(`/api/projects/${id}`, {
       method: 'PATCH',
@@ -51,5 +72,5 @@ export function useProjects() {
     setProjects(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
   };
 
-  return { projects, loading, addProject, deleteProject, updateProject };
+  return { projects, loading, addProject, deleteProject, restoreProject, permanentDelete, fetchTrash, updateProject };
 }

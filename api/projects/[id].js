@@ -25,9 +25,14 @@ export default async function handler(req, res) {
 
   if (req.method === 'DELETE') {
     try {
-      await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [id] });
-      await db.execute({ sql: 'DELETE FROM calibrations WHERE project_id = ?', args: [id] });
-      await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [id] });
+      await db.execute({ sql: `UPDATE projects SET deleted_at = datetime('now') WHERE id = ?`, args: [id] });
+      return res.json({ success: true });
+    } catch (err) { return res.status(500).json({ success: false, message: err.message }); }
+  }
+
+  if (req.method === 'POST' && req.query.action === 'restore') {
+    try {
+      await db.execute({ sql: `UPDATE projects SET deleted_at = NULL WHERE id = ?`, args: [id] });
       return res.json({ success: true });
     } catch (err) { return res.status(500).json({ success: false, message: err.message }); }
   }

@@ -24,6 +24,7 @@ const DashboardPage: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [logsSearchQuery, setLogsSearchQuery] = useState('');
   const { projects, loading, addProject, deleteProject } = useProjects();
@@ -105,9 +106,15 @@ const DashboardPage: React.FC = () => {
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
-    await deleteProject(projectToDelete.id);
-    await postLog('warning', `Project "${projectToDelete.name}" deleted by ${userName}`, 'Warning / Deleted');
-    fetchLogs();
+    try {
+      await deleteProject(projectToDelete.id);
+      await postLog('warning', `Project "${projectToDelete.name}" deleted by ${userName}`, 'Warning / Deleted');
+      fetchLogs();
+      setShowDeleteSuccess(true);
+      setTimeout(() => setShowDeleteSuccess(false), 2000);
+    } catch {
+      alert('Failed to delete project. Please try again.');
+    }
     setShowDeleteModal(false);
     setProjectToDelete(null);
   };
@@ -356,6 +363,20 @@ const DashboardPage: React.FC = () => {
         </div>
       </main>
 
+      {showDeleteSuccess && (
+        <div className="ep-notif-overlay">
+          <div className="ep-notif-modal">
+            <div className="ep-notif-checkmark">
+              <svg viewBox="0 0 52 52">
+                <circle className="ep-notif-circle" cx="26" cy="26" r="25" fill="none" />
+                <path className="ep-notif-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+              </svg>
+            </div>
+            <h2 className="ep-notif-title--success">Deleted!</h2>
+            <p className="ep-notif-message">Project has been deleted successfully.</p>
+          </div>
+        </div>
+      )}
       {selectedLog && (
         <ActivityLogDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />
       )}

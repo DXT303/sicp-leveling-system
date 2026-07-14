@@ -96,8 +96,25 @@ app.patch('/api/auth/update', async (req, res) => {
 // ── Projects ──
 app.get('/api/projects', async (req, res) => {
   try {
-    const result = await db.execute('SELECT * FROM projects ORDER BY created_at DESC');
+    const result = await db.execute('SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY created_at DESC');
     res.json(toObjects(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.get('/api/projects/trash', async (req, res) => {
+  try {
+    const result = await db.execute('SELECT * FROM projects WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC');
+    res.json(toObjects(result));
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.delete('/api/projects/trash', async (req, res) => {
+  try {
+    const { id } = req.body;
+    await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [id] });
+    await db.execute({ sql: 'DELETE FROM calibrations WHERE project_id = ?', args: [id] });
+    await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [id] });
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
@@ -137,10 +154,14 @@ app.patch('/api/projects/:id', async (req, res) => {
 
 app.delete('/api/projects/:id', async (req, res) => {
   try {
-    const id = req.params.id;
-    await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [id] });
-    await db.execute({ sql: 'DELETE FROM calibrations WHERE project_id = ?', args: [id] });
-    await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [id] });
+    await db.execute({ sql: `UPDATE projects SET deleted_at = datetime('now') WHERE id = ?`, args: [req.params.id] });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+app.post('/api/projects/:id/restore', async (req, res) => {
+  try {
+    await db.execute({ sql: `UPDATE projects SET deleted_at = NULL WHERE id = ?`, args: [req.params.id] });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });

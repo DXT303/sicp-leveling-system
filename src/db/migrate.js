@@ -4,8 +4,9 @@ import * as m003 from './migrations/003_activity_logs_add_details.js';
 import * as m004 from './migrations/004_leveling_rows_index.js';
 import * as m005 from './migrations/005_calibrations_add_method.js';
 import * as m006 from './migrations/006_calibrations_add_distance.js';
+import * as m007 from './migrations/007_projects_soft_delete.js';
 
-const ALL_MIGRATIONS = [m001, m002, m003, m004, m005, m006];
+const ALL_MIGRATIONS = [m001, m002, m003, m004, m005, m006, m007];
 
 export async function runMigrations(db) {
   // Ensure migrations tracking table exists

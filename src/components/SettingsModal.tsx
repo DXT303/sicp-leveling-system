@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './SettingsModal.css';
+import RecycleBinModal from './RecycleBinModal';
+import { useProjects } from './useProjects';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onProjectRestored?: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onProjectRestored }) => {
+  const { fetchTrash, restoreProject, permanentDelete } = useProjects();
+  const [showRecycleBin, setShowRecycleBin] = useState(false);
   const userName = sessionStorage.getItem('userName') || '';
   const userEmail = sessionStorage.getItem('userEmail') || '';
 
@@ -146,7 +151,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* Recycle Bin */}
+          <div className="settings-section">
+            <p className="settings-section-label">Data</p>
+            <button
+              className="settings-btn-recycle"
+              onClick={() => setShowRecycleBin(true)}
+            >
+              🗑️ Recycle Bin
+            </button>
+          </div>
+
         </div>
+
+        {showRecycleBin && (
+          <RecycleBinModal
+            isOpen={showRecycleBin}
+            onClose={() => setShowRecycleBin(false)}
+            fetchTrash={fetchTrash}
+            onRestore={async (id) => { await restoreProject(id); onProjectRestored?.(); }}
+            onPermanentDelete={permanentDelete}
+          />
+        )}
 
         {toast && (
           <div className={`settings-toast settings-toast--${toast.type}`}>{toast.msg}</div>

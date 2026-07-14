@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const result = await db.execute('SELECT * FROM projects ORDER BY created_at DESC');
+      const result = await db.execute('SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY created_at DESC');
       return res.json(toObjects(result));
     } catch (err) { return res.status(500).json({ success: false, message: err.message }); }
   }

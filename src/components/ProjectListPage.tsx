@@ -88,13 +88,17 @@ const ProjectListPage: React.FC = () => {
     setSelectedProject(prev => prev ? { ...prev, ...data } : prev);
   };
 
-  const handleConfirmDelete = () => {
-    if (deleteTargetId !== null) deleteProject(deleteTargetId);
+  const handleConfirmDelete = async () => {
+    if (deleteTargetId === null) return;
+    const id = deleteTargetId;
     setDeleteTargetId(null);
-    setTimeout(() => {
+    try {
+      await deleteProject(id);
       setShowDeleteSuccess(true);
-      setTimeout(() => setShowDeleteSuccess(false), 1500);
-    }, 0);
+      setTimeout(() => setShowDeleteSuccess(false), 2000);
+    } catch {
+      alert('Failed to delete project. Please try again.');
+    }
   };
 
   if (!isAuthenticated) return null;
