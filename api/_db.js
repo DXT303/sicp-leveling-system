@@ -5,11 +5,16 @@ let _db = null;
 
 export async function getDb() {
   if (_db) return _db;
-  _db = createClient({
+  const client = createClient({
     url: process.env.TURSO_DATABASE_URL ?? process.env.TURSO_URL,
     authToken: process.env.TURSO_AUTH_TOKEN,
   });
-  await runMigrations(_db);
+  try {
+    await runMigrations(client);
+  } catch (err) {
+    console.error('Migration error (non-fatal):', err.message);
+  }
+  _db = client;
   return _db;
 }
 
