@@ -1,4 +1,4 @@
-import { getDb } from '../_db.js';
+import { getDb, toObject } from '../_db.js';
 
 export default async function handler(req, res) {
   const db = await getDb();
@@ -25,6 +25,8 @@ export default async function handler(req, res) {
 
   if (req.method === 'DELETE') {
     try {
+      await db.execute({ sql: 'DELETE FROM leveling_rows WHERE project_id = ?', args: [id] });
+      await db.execute({ sql: 'DELETE FROM calibrations WHERE project_id = ?', args: [id] });
       await db.execute({ sql: 'DELETE FROM projects WHERE id = ?', args: [id] });
       return res.json({ success: true });
     } catch (err) { return res.status(500).json({ success: false, message: err.message }); }
